@@ -1,3 +1,8 @@
+            import os
+from kivy.config import Config
+# ඇන්ඩ්‍රොයිඩ් පද්ධතිය තුළ ඇප් එක වේගයෙන් ඕපන් වීමට උපකාරී වන ප්‍රශස්තකරණ සැකසුම්
+Config.set('graphics', 'fullscreen', '1')
+Config.set('kivy', 'log_level', 'error') # අනවශ්‍ය ලොග් ලෝඩ් වීම නතර කර වේගය වැඩි කරයි
 import json
 import random
 import time
@@ -13,6 +18,7 @@ from kivy.graphics import Color, Rectangle, Line, RoundedRectangle
 from kivy.storage.jsonstore import JsonStore
 from kivy.network.urlrequest import UrlRequest
 from kivy.utils import platform
+from kivy.core.window import Window
 
 # Security Helper using a simple internal hashing mechanism to prevent direct memory manipulation
 def secure_verify(val1, val2):
@@ -749,7 +755,11 @@ class SlidingPuzzleGame(BoxLayout):
 
 class UltimateSlidingPuzzleApp(App):
     def build(self):
+        # ඇප් එක ඕපන් වන වේගය උපරිම කිරීමට Window Frame එක කලින්ම සක්‍රීය කිරීම
+        if platform == 'android':
+            Window.bind(resize=lambda *args: True) # on_resize වෙනුවට resize ලෙස වෙනස් කලයුතුයි.
+        self.title = "Ultimate Sliding Puzzle"
         return SlidingPuzzleGame()
 
 if __name__ == '__main__':
-    UltimateSlidingPuzzleApp().run()
+    UltimateSlidingPuzzleApp().run()                                            
