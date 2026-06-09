@@ -5,7 +5,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
     steps:
       - name: Checkout code
@@ -28,31 +28,12 @@ jobs:
           sudo apt-get install -y git zip unzip openjdk-17-jdk python3-pip autoconf libtool pkg-config zlib1g-dev libncurses5-dev libsqlite3-dev libgdbm-dev libssl-dev libbz2-dev libffi-dev zlib1g-dev
           pip3 install --user --upgrade buildozer cython virtualenv
 
-      - name: Pre-Install Android SDK and Create Symlink Bridge
-        run: |
-          # 1. Setup SDK folder structure
-          mkdir -p ~/.buildozer/android/platform/android-sdk/cmdline-tools
-          cd ~/.buildozer/android/platform/android-sdk/cmdline-tools
-          
-          # 2. Download official Android Commandline Tools
-          wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O cmdline-tools.zip
-          unzip cmdline-tools.zip
-          mv cmdline-tools latest
-          
-          # 3. Create the tools bridge for Buildozer compatibility
-          cd ~/.buildozer/android/platform/android-sdk
-          ln -s cmdline-tools/latest tools
-          
-          # 4. Set environment paths and forcefully accept licenses
-          export ANDROID_HOME=$HOME/.buildozer/android/platform/android-sdk
-          export PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin
-          
-          echo "yes" | yes | ./cmdline-tools/latest/bin/sdkmanager --licenses || true
-
       - name: Build APK with Buildozer
         run: |
           export PATH=$PATH:~/.local/bin
-          buildozer -v android debug
+          # Force accept licenses inside buildozer build
+          yes | buildozer -v android debug
+        continue-on-error: false
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
