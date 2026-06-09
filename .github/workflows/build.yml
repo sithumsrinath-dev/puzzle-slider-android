@@ -1,67 +1,55 @@
 name: Build Release APK
 
-​on:
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
 
-push:
+jobs:
+  build:
+    runs-on: ubuntu-22.04
 
-branches: [ main ]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-​jobs:
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11' # වඩාත් ස්ථාවර සංස්කරණයකට හැරවීම
 
-build:
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
 
-runs-on: ubuntu-latest
+      - name: Install Linux Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y git zip unzip openjdk-17-jdk python3-pip autoconf libtool pkg-config zlib1g-dev libncurses5-dev libsqlite3-dev libgdbm-dev libssl-dev libbz2-dev libffi-dev
+          pip3 install --user --upgrade buildozer cython virtualenv
 
-​steps:
+      - name: Android Licenses Accept & Build
+        run: |
+          export PATH=$PATH:~/.local/bin
+          
+          # Android SDK එක ඇතුළේ තියෙන හැම License එකකටම බලෙන්ම එකඟ වීම (Force Accept)
+          mkdir -p ~/.buildozer/android/platform/android-sdk/licenses
+          echo -e "\n8933bad161ad4178b1185d1a37fbf41ea5269c55\nd56f5187479451eabf01fb74bf367944a3a41264\n24333f8a63b6825ea9c5514f83d2829b004d1fee" > ~/.buildozer/android/platform/android-sdk/licenses/android-sdk-license
+          echo -e "\n84831b9409646a918e30573bab4c9c91346d8abd" > ~/.buildozer/android/platform/android-sdk/licenses/android-sdk-preview-license
+          
+          # Buildozer එකට කෙලින්ම විධානය දීම
+          yes | buildozer -v android release
+        continue-on-error: false
 
-- uses: actions/checkout@v3
+      - name: Generate Keystore & Sign APK
+        run: |
+          keytool -genkey -v -keystore release.keystore -alias puzzle_alias -keyalg RSA -keysize 2048 -validity 10000 -storepass silentpuzzle123 -keypass silentpuzzle123 -dname "CN=SilentThoughts, O=App, L=Colombo, C=LK"
+          jarsigner -verbose -sigalg SHA1withRSA -digestalg SHA1 -keystore release.keystore -storepass silentpuzzle123 bin/*.apk puzzle_alias
 
-​- name: Get Date
-
-# Buildozer cache එක සඳහා දිනය ලබා ගැනීම
-
-run: |
-
-echo "date=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
-
-​- name: Cache Buildozer JSONS
-
-uses: actions/cache@v3
-
-with:
-
-path: .buildozer
-
-key: {{ runner.os }}-buildozer-{{ env.date }}
-
-​- name: Build with Buildozer
-
-uses: ArtemGovorov/buildozer-action@v1
-
-id: buildozer
-
-with:
-
-command: buildozer android release
-
-repository_root: .
-
-​- name: Generate Keystore & Sign APK
-
-# මෙතනදී GitHub විසින්ම ස්වයංක්‍රීයව ආරක්ෂිත Key එකක් සාදා ඇප් එක Lock කරයි
-
-run: |
-
-keytool -genkey -v -keystore release.keystore -alias puzzle_alias -keyalg RSA -keysize 2048 -validity 10000 -storepass silentpuzzle123 -keypass silentpuzzle123 -dname "CN=SilentThoughts, O=App, L=Colombo, C=LK"
-
-jarsigner -verbose -sigalg SHA1withRSA -digestalg SHA1 -keystore release.keystore -storepass silentpuzzle123 bin/*.apk puzzle_alias
-
-​- name: Upload APK Artifact
-
-uses: actions/upload-artifact@v3
-
-with:
-
-name: Ultimate-Sliding-Puzzle-Release
-
-path: bin/*.apk
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Ultimate-Sliding-Puzzle-Release
+          path: bin/*.apk
