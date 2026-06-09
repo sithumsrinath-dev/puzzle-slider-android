@@ -16,7 +16,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11' # වඩාත් ස්ථාවර සංස්කරණයකට හැරවීම
+          python-version: '3.11'
 
       - name: Setup Java
         uses: actions/setup-java@v4
@@ -28,18 +28,11 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y git zip unzip openjdk-17-jdk python3-pip autoconf libtool pkg-config zlib1g-dev libncurses5-dev libsqlite3-dev libgdbm-dev libssl-dev libbz2-dev libffi-dev
-          pip3 install --user --upgrade buildozer cython virtualenv
+          pip3 install --user --upgrade "buildozer<=1.5.0" cython virtualenv
 
-      - name: Android Licenses Accept & Build
+      - name: Build APK with Buildozer
         run: |
           export PATH=$PATH:~/.local/bin
-          
-          # Android SDK එක ඇතුළේ තියෙන හැම License එකකටම බලෙන්ම එකඟ වීම (Force Accept)
-          mkdir -p ~/.buildozer/android/platform/android-sdk/licenses
-          echo -e "\n8933bad161ad4178b1185d1a37fbf41ea5269c55\nd56f5187479451eabf01fb74bf367944a3a41264\n24333f8a63b6825ea9c5514f83d2829b004d1fee" > ~/.buildozer/android/platform/android-sdk/licenses/android-sdk-license
-          echo -e "\n84831b9409646a918e30573bab4c9c91346d8abd" > ~/.buildozer/android/platform/android-sdk/licenses/android-sdk-preview-license
-          
-          # Buildozer එකට කෙලින්ම විධානය දීම
           yes | buildozer -v android release
         continue-on-error: false
 
