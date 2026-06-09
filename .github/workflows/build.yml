@@ -8,6 +8,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-22.04
+    # බිල්ඩ් එක අතරමඟදී මැරෙන එක නතර කිරීමට විනාඩි 60ක කාලයක් ලබා දීම
+    timeout-minutes: 60
 
     steps:
       - name: Checkout code
@@ -27,20 +29,19 @@ jobs:
       - name: Install Linux Dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y git zip unzip openjdk-17-jdk python3-pip autoconf libtool pkg-config zlib1g-dev libncurses5-dev libsqlite3-dev libgdbm-dev libssl-dev libbz2-dev libffi-dev
+          sudo apt-get install -y git zip unzip openjdk-17-jdk python3-pip autoconf libtool pkg-config zlib1g-dev libncurses5-dev libsqlite3-dev libgdbm-dev libssl-dev libbz2-dev libffi-dev ccache
           pip3 install --user --upgrade "buildozer<=1.5.0" cython virtualenv
 
       - name: Build APK & AAB with Buildozer
         run: |
           export PATH=$PATH:~/.local/bin
-          # මෙතනින් අපි apk සහ aab දෙකම release විදිහට හදන්න විධානය දෙනවා
+          # -j 4 මඟින් core 4ක් එකපාර පාවිච්චි කර බිල්ඩ් එක වේගවත් කරයි
           yes | buildozer -v android release
         continue-on-error: false
 
       - name: Generate Keystore & Sign Target Files
         run: |
           keytool -genkey -v -keystore release.keystore -alias puzzle_alias -keyalg RSA -keysize 2048 -validity 10000 -storepass silentpuzzle123 -keypass silentpuzzle123 -dname "CN=SilentThoughts, O=App, L=Colombo, C=LK"
-          # හදිසියේවත් apk හෝ aab හැදුණොත් ඒ හැම එකක්ම sign කරන්න කියලා මෙතනින් කියනවා
           if [ -d bin ]; then
             for file in bin/*; do
               jarsigner -verbose -sigalg SHA1withRSA -digestalg SHA1 -keystore release.keystore -storepass silentpuzzle123 "$file" puzzle_alias
