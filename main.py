@@ -1,8 +1,4 @@
-            import os
-from kivy.config import Config
-# ඇන්ඩ්‍රොයිඩ් පද්ධතිය තුළ ඇප් එක වේගයෙන් ඕපන් වීමට උපකාරී වන ප්‍රශස්තකරණ සැකසුම්
-Config.set('graphics', 'fullscreen', '1')
-Config.set('kivy', 'log_level', 'error') # අනවශ්‍ය ලොග් ලෝඩ් වීම නතර කර වේගය වැඩි කරයි
+import os
 import json
 import random
 import time
@@ -762,4 +758,4 @@ class UltimateSlidingPuzzleApp(App):
         return SlidingPuzzleGame()
 
 if __name__ == '__main__':
-    UltimateSlidingPuzzleApp().run()                                            
+    UltimateSlidingPuzzleApp().run()
