@@ -1,4 +1,4 @@
-name: Build Release APK
+name: Build Release APK & AAB
 
 on:
   push:
@@ -30,19 +30,25 @@ jobs:
           sudo apt-get install -y git zip unzip openjdk-17-jdk python3-pip autoconf libtool pkg-config zlib1g-dev libncurses5-dev libsqlite3-dev libgdbm-dev libssl-dev libbz2-dev libffi-dev
           pip3 install --user --upgrade "buildozer<=1.5.0" cython virtualenv
 
-      - name: Build APK with Buildozer
+      - name: Build APK & AAB with Buildozer
         run: |
           export PATH=$PATH:~/.local/bin
+          # මෙතනින් අපි apk සහ aab දෙකම release විදිහට හදන්න විධානය දෙනවා
           yes | buildozer -v android release
         continue-on-error: false
 
-      - name: Generate Keystore & Sign APK
+      - name: Generate Keystore & Sign Target Files
         run: |
           keytool -genkey -v -keystore release.keystore -alias puzzle_alias -keyalg RSA -keysize 2048 -validity 10000 -storepass silentpuzzle123 -keypass silentpuzzle123 -dname "CN=SilentThoughts, O=App, L=Colombo, C=LK"
-          jarsigner -verbose -sigalg SHA1withRSA -digestalg SHA1 -keystore release.keystore -storepass silentpuzzle123 bin/*.apk puzzle_alias
+          # හදිසියේවත් apk හෝ aab හැදුණොත් ඒ හැම එකක්ම sign කරන්න කියලා මෙතනින් කියනවා
+          if [ -d bin ]; then
+            for file in bin/*; do
+              jarsigner -verbose -sigalg SHA1withRSA -digestalg SHA1 -keystore release.keystore -storepass silentpuzzle123 "$file" puzzle_alias
+            done
+          fi
 
-      - name: Upload APK Artifact
+      - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: Ultimate-Sliding-Puzzle-Release
-          path: bin/*.apk
+          name: Ultimate-Sliding-Puzzle-Release-Files
+          path: bin/*
