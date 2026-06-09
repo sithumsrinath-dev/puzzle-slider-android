@@ -1,4 +1,4 @@
-app]
+[app]
 title = Ultimate Sliding Puzzle
 package.name = puzzleslider
 package.domain = org.silentthoughts
