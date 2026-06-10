@@ -1,4 +1,4 @@
-name: Build Release APK & AAB
+name: Ultimate Android Build (Keep-Alive Mode)
 
 on:
   push:
@@ -8,19 +8,18 @@ on:
 jobs:
   build:
     runs-on: ubuntu-22.04
-    # බිල්ඩ් එක අතරමඟදී මැරෙන එක නතර කිරීමට විනාඩි 60ක කාලයක් ලබා දීම
-    timeout-minutes: 60
+    timeout-minutes: 120 # පැය 2ක් යනකම් සර්වර් එකට මැරෙන්න දෙන්නේ නැහැ
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Python
+      - name: Setup Python 3.11
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
-      - name: Setup Java
+      - name: Setup Java 17
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
@@ -30,16 +29,24 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y git zip unzip openjdk-17-jdk python3-pip autoconf libtool pkg-config zlib1g-dev libncurses5-dev libsqlite3-dev libgdbm-dev libssl-dev libbz2-dev libffi-dev ccache
-          pip3 install --user --upgrade "buildozer<=1.5.0" cython virtualenv
+          pip3 install --user --upgrade "buildozer>=1.5.0" cython virtualenv
 
-      - name: Build APK & AAB with Buildozer
+      - name: Build APK with Keep-Alive Signal
         run: |
           export PATH=$PATH:~/.local/bin
-          # -j 4 මඟින් core 4ක් එකපාර පාවිච්චි කර බිල්ඩ් එක වේගවත් කරයි
+          
+          # සර්වර් එක බලෙන්ම ඔන් කර තැබීමේ පසුබිම් ක්‍රියාවලිය (අත දාලා අල්ලන් ඉන්නවා වගේ වැඩක්!)
+          bash -c 'while true; do echo "⏳ [Keep-Alive] සර්වර් එක සක්‍රීයයි... බිල්ඩ් එක සිදුවෙමින් පවතිනවා..."; sleep 30; done' &
+          KEEP_ALIVE_PID=$!
+          
+          # නිල වශයෙන් බිල්ඩ් එක පටන් ගැනීම
           yes | buildozer -v android release
+          
+          # බිල්ඩ් එක ඉවර වුණාම සර්වර් එක රවට්ටන එක නතර කිරීම
+          kill $KEEP_ALIVE_PID
         continue-on-error: false
 
-      - name: Generate Keystore & Sign Target Files
+      - name: Auto-Sign All Created Files
         run: |
           keytool -genkey -v -keystore release.keystore -alias puzzle_alias -keyalg RSA -keysize 2048 -validity 10000 -storepass silentpuzzle123 -keypass silentpuzzle123 -dname "CN=SilentThoughts, O=App, L=Colombo, C=LK"
           if [ -d bin ]; then
@@ -48,8 +55,8 @@ jobs:
             done
           fi
 
-      - name: Upload Artifacts
+      - name: Upload Signed APK / AAB
         uses: actions/upload-artifact@v4
         with:
-          name: Ultimate-Sliding-Puzzle-Release-Files
+          name: Ultimate-Sliding-Puzzle-Final-App
           path: bin/*
