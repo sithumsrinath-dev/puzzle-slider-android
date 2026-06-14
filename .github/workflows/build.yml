@@ -1,4 +1,4 @@
-name: Ultimate Android Build (Keep-Alive Mode)
+name: Production Android Build (Keep-Alive & Export Grade)
 
 on:
   push:
@@ -7,56 +7,68 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-22.04
-    timeout-minutes: 120 # පැය 2ක් යනකම් සර්වර් එකට මැරෙන්න දෙන්නේ නැහැ
+    runs-on: ubuntu-24.04  # අලුත්ම සහ ස්ථාවරම පද්ධතිය
+    timeout-minutes: 120   # පැය 2ක් යනකම් සර්වර් එකට මැරෙන්න දෙන්නේ නැහැ
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+    - name: Checkout Code
+      uses: actions/checkout@v4
 
-      - name: Setup Python 3.11
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
+    - name: Setup Java JDK 17
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '17'
 
-      - name: Setup Java 17
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '17'
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
 
-      - name: Install Linux Dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y git zip unzip openjdk-17-jdk python3-pip autoconf libtool pkg-config zlib1g-dev libncurses5-dev libsqlite3-dev libgdbm-dev libssl-dev libbz2-dev libffi-dev ccache
-          pip3 install --user --upgrade "buildozer>=1.5.0" cython virtualenv
+    - name: Install System Dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y --no-install-recommends \
+          build-essential ccache git libffi-dev libssl-dev \
+          libltdl-dev libgstreamer1.0-dev gstreamer1.0-plugins-base \
+          gstreamer1.0-plugins-good gstreamer1.0-plugins-bad \
+          gstreamer1.0-plugins-ugly gstreamer1.0-libav gstreamer1.0-doc \
+          libgstreamer-plugins-base1.0-dev unzip zip openjdk-17-jdk \
+          autoconf libtool pkg-config zlib1g-dev python3-setuptools \
+          python3-pip python3-dev libncurses5-dev libsqlite3-dev libgdbm-dev libbz2-dev
 
-      - name: Build APK with Keep-Alive Signal
-        run: |
-          export PATH=$PATH:~/.local/bin
-          
-          # සර්වර් එක බලෙන්ම ඔන් කර තැබීමේ පසුබිම් ක්‍රියාවලිය (අත දාලා අල්ලන් ඉන්නවා වගේ වැඩක්!)
-          bash -c 'while true; do echo "⏳ [Keep-Alive] සර්වර් එක සක්‍රීයයි... බිල්ඩ් එක සිදුවෙමින් පවතිනවා..."; sleep 30; done' &
-          KEEP_ALIVE_PID=$!
-          
-          # නිල වශයෙන් බිල්ඩ් එක පටන් ගැනීම
-          yes | buildozer -v android release
-          
-          # බිල්ඩ් එක ඉවර වුණාම සර්වර් එක රවට්ටන එක නතර කිරීම
-          kill $KEEP_ALIVE_PID
-        continue-on-error: false
+    - name: Install Python Build Tools
+      run: |
+        python -m pip install --upgrade pip
+        pip install --upgrade Cython==3.0.10 "buildozer>=1.5.0" virtualenv
 
-      - name: Auto-Sign All Created Files
-        run: |
-          keytool -genkey -v -keystore release.keystore -alias puzzle_alias -keyalg RSA -keysize 2048 -validity 10000 -storepass silentpuzzle123 -keypass silentpuzzle123 -dname "CN=SilentThoughts, O=App, L=Colombo, C=LK"
-          if [ -d bin ]; then
-            for file in bin/*; do
-              jarsigner -verbose -sigalg SHA1withRSA -digestalg SHA1 -keystore release.keystore -storepass silentpuzzle123 "$file" puzzle_alias
-            done
-          fi
+    - name: Build Android Artifacts with Keep-Alive Signal
+      run: |
+        # 1. සර්වර් එක නොනවත්වා ක්‍රියාත්මක කර තැබීමේ පසුබිම් සංඥාව (Keep-Alive)
+        bash -c 'while true; do echo "⏳ [Keep-Alive] සර්වර් එක සක්‍රීයයි... බිල්ඩ් එක සිදුවෙමින් පවතිනවා..."; sleep 30; done' &
+        KEEP_ALIVE_PID=$!
+        
+        # 2. ප්‍රථමයෙන් Play Store සඳහා .aab (App Bundle) එක බිල්ඩ් කිරීම
+        sed -i 's/android.release_artifact = apk/android.release_artifact = aab/g' buildozer.spec
+        yes | buildozer android release
+        
+        # 3. ඊළඟට ඔයාට ටෙස්ට් කරලා බලන්න .apk එකක් බිල්ඩ් කිරීම
+        sed -i 's/android.release_artifact = aab/android.release_artifact = apk/g' buildozer.spec
+        yes | buildozer android debug
+        
+        # 4. බිල්ඩ් එක අවසන් වූ පසු Keep-Alive ක්‍රියාවලිය නතර කිරීම
+        kill $KEEP_ALIVE_PID
+      continue-on-error: false
 
-      - name: Upload Signed APK / AAB
-        uses: actions/upload-artifact@v4
-        with:
-          name: Ultimate-Sliding-Puzzle-Final-App
-          path: bin/*
+    - name: Upload Production AAB (For Google Play Store)
+      uses: actions/upload-artifact@v4
+      with:
+        name: Play-Store-Production-Bundle-AAB
+        path: .buildozer/android/platform/build-arm64-v8a_armeabi-v7a/dists/*/*.aab
+
+    - name: Upload Testing APK (For your Mobile Phone)
+      uses: actions/upload-artifact@v4
+      with:
+        name: Testing-App-APK
+        path: bin/*.apk
+    
