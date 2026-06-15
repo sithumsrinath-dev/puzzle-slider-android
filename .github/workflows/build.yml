@@ -1,4 +1,4 @@
-name: Production Android Build (Final Stable)
+name: Production Android Build (License Fix)
 
 on:
   push:
@@ -8,7 +8,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-22.04
-    timeout-minutes: 60  # සර්වර් එකට බ්ලොක් නොවී උපරිම පැයක් ධාවනය වීමට ඉඩ දී ඇත
+    timeout-minutes: 60
 
     steps:
     - name: Checkout Code
@@ -47,24 +47,30 @@ jobs:
         pip install --upgrade pip
         pip install --upgrade Cython==3.0.10 "buildozer>=1.5.0" virtualenv setuptools wheel
         
-        export ANDROID_HOME=$ANDROID_HOME_ROOT
-        export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH
-        
+        # 1. Buildozer හට තමන්ගේම ෆෝල්ඩර ව්‍යුහය කලින්ම සාදා ගැනීමට සැලැස්වීම
+        mkdir -p ~/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin
         mkdir -p ~/.android
         touch ~/.android/repositories.cfg
+        
+        # 2. පද්ධතියේ පවතින නිල Android SDK ලයිසන් පිළිගැනීම
+        export ANDROID_HOME=$ANDROID_HOME_ROOT
+        export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH
         yes | sdkmanager --licenses || true
         
-        # පැරණි කැඩුණු ලොග් හෝ Cache ඇත්නම් ඒවා පිරිසිදු කිරීම
+        # 3. පැරණි කැඩුණු Cache ඉවත් කිරීම
         buildozer android clean || true
         
-        # 👑 [STABLE EXECUTION] සර්වර් එකෙන් බ්ලොක් නොවන ලෙස සෘජුවම බිල්ඩ් කිරීම
+        # 👑 [රන්වන් විසඳුම - Build-Tools 37 License Force Accept] 👑
+        # බිල්ඩ් එක සිදුවෙද්දී Buildozer එකෙන් අහන 'Accept? (y/N)' ප්‍රශ්නයට 
+        # පද්ධතිය විසින්ම ස්වයංක්‍රීයව 'yes' (y) කියා පිළිතුරු දීමට 'yes |' විධානය එකතු කර ඇත.
+        
         # පළමුව Play Store සඳහා .aab එක නිපදවීම
         sed -i 's/android.release_artifact = apk/android.release_artifact = aab/g' buildozer.spec
-        buildozer android release
+        yes | buildozer android release
         
         # දෙවනුව ජංගම දුරකථනයට දැමීමට .apk එක නිපදවීම
         sed -i 's/android.release_artifact = aab/android.release_artifact = apk/g' buildozer.spec
-        buildozer android debug
+        yes | buildozer android debug
         
       continue-on-error: false
 
