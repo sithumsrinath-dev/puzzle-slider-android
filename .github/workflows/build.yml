@@ -43,11 +43,17 @@ jobs:
         python -m pip install --upgrade pip
         pip install --upgrade Cython==3.0.10 "buildozer>=1.5.0" virtualenv
 
+    - name: Accept Android SDK Licenses  # 👑 Exit Code 100 විසඳන රන්වන් පියවර මෙන්න 👑
+      run: |
+        mkdir -p ~/.android
+        touch ~/.android/repositories.cfg
+        yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses || true
+
     - name: Build Android Artifacts with Keep-Alive Signal
       run: |
         # 1. සර්වර් එක නොනවත්වා ක්‍රියාත්මක කර තැබීමේ පසුබිම් සංඥාව (Keep-Alive)
         bash -c 'while true; do echo "⏳ [Keep-Alive] සර්වර් එක සක්‍රීයයි... බිල්ඩ් එක සිදුවෙමින් පවතිනවා..."; sleep 30; done' &
-        KEEP_ALIVE_PID=$!
+        KEEP_ALIVE_PID=$!        
         
         # 2. ප්‍රථමයෙන් Play Store සඳහා .aab (App Bundle) එක බිල්ඩ් කිරීම
         sed -i 's/android.release_artifact = apk/android.release_artifact = aab/g' buildozer.spec
