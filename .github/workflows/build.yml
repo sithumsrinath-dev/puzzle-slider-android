@@ -38,37 +38,21 @@ jobs:
           python3-pip python3-dev libncurses5-dev libsqlite3-dev libgdbm-dev libbz2-dev \
           libjpeg-dev zlib1g-dev appstream
 
-    - name: Install Python Build Tools
-      run: |
-        python -m pip install --upgrade pip
-        pip install --upgrade Cython==3.0.10 "buildozer>=1.5.0" virtualenv setuptools wheel
+    # 👑 [රන්වන් විසඳුම] නිල Buildozer Action එක භාවිතයෙන් ස්ථාවරව බිල්ඩ් කිරීම
+    - name: Build Android App using Official Action
+      uses: ArtemGovorov/buildozer-action@v1
+      with:
+        buildozer_version: stable
+        command: buildozer android debug
+        repository_root: .
 
-    - name: Accept Android SDK Licenses
-      run: |
-        mkdir -p ~/.android
-        touch ~/.android/repositories.cfg
-        yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses || true
-
-    - name: Build Android Artifacts with Keep-Alive Signal
-      run: |
-        # Buildozer පැරණි කැඩුණු Cache ගොනු ඇත්නම් ඒවා ඉවත් කිරීම
-        buildozer android clean || true
-        
-        # 1. සර්වර් එක නොනවත්වා ක්‍රියාත්මක කර තැබීමේ පසුබිම් සංඥාව (Keep-Alive)
-        bash -c 'while true; do echo "⏳ [Keep-Alive] සර්වර් එක සක්‍රීයයි... බිල්ඩ් එක සිදුවෙමින් පවතිනවා..."; sleep 30; done' &
-        KEEP_ALIVE_PID=$!        
-        
-        # 2. ප්‍රථමයෙන් Play Store සඳහා .aab (App Bundle) එක බිල්ඩ් කිරීම
-        sed -i 's/android.release_artifact = apk/android.release_artifact = aab/g' buildozer.spec
-        yes | buildozer android release
-        
-        # 3. ඊළඟට ඔයාට ටෙස්ට් කරලා බලන්න .apk එකක් බිල්ඩ් කිරීම
-        sed -i 's/android.release_artifact = aab/android.release_artifact = apk/g' buildozer.spec
-        yes | buildozer android debug
-        
-        # 4. බිල්ඩ් එක අවසන් වූ පසු Keep-Alive ක්‍රියාවලිය නතර කිරීම
-        kill $KEEP_ALIVE_PID
-      continue-on-error: false
+    # 👑 Play Store සඳහා .aab එක බිල්ඩ් කිරීම
+    - name: Build Android Release Bundle (AAB)
+      uses: ArtemGovorov/buildozer-action@v1
+      with:
+        buildozer_version: stable
+        command: buildozer android release
+        repository_root: .
 
     - name: Upload Production AAB (For Google Play Store)
       uses: actions/upload-artifact@v4
