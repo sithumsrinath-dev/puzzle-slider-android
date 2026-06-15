@@ -7,7 +7,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-22.04  # වඩාත් ස්ථාවර සහ Android බිල්ඩ් සඳහා හොඳින්ම ගැළපෙන පද්ධතිය
     timeout-minutes: 120
 
     steps:
@@ -36,23 +36,41 @@ jobs:
           libgstreamer-plugins-base1.0-dev unzip zip openjdk-17-jdk \
           autoconf libtool pkg-config zlib1g-dev python3-setuptools \
           python3-pip python3-dev libncurses5-dev libsqlite3-dev libgdbm-dev libbz2-dev \
-          libjpeg-dev zlib1g-dev appstream
+          libjpeg-dev zlib1g-dev appstream autotools-dev
 
-    # 👑 [රන්වන් විසඳුම] නිල Buildozer Action එක භාවිතයෙන් ස්ථාවරව බිල්ඩ් කිරීම
-    - name: Build Android App using Official Action
-      uses: ArtemGovorov/buildozer-action@v1
-      with:
-        buildozer_version: stable
-        command: buildozer android debug
-        repository_root: .
-
-    # 👑 Play Store සඳහා .aab එක බිල්ඩ් කිරීම
-    - name: Build Android Release Bundle (AAB)
-      uses: ArtemGovorov/buildozer-action@v1
-      with:
-        buildozer_version: stable
-        command: buildozer android release
-        repository_root: .
+    - name: Build Android App inside Virtual Environment
+      run: |
+        # 1. ස්වාධීන Python Virtual Environment එකක් සකසා ගැනීම (PIP වැරදි මඟහරවයි)
+        python -m venv venv
+        source venv/bin/activate
+        
+        # 2. අවශ්‍ය මෙවලම් පද්ධතිය ස්ථාපනය කිරීම
+        pip install --upgrade pip
+        pip install --upgrade Cython==3.0.10 "buildozer>=1.5.0" virtualenv setuptools wheel
+        
+        # 3. Android SDK බලපත්‍ර (Licenses) ස්වයංක්‍රීයව පිළිගැනීම
+        mkdir -p ~/.android
+        touch ~/.android/repositories.cfg
+        yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses || true
+        
+        # 4. පසුබිම් Keep-Alive සංඥාව සක්‍රීය කිරීම
+        bash -c 'while true; do echo "⏳ [Keep-Alive] සර්වර් එක සක්‍රීයයි... බිල්ඩ් එක සිදුවෙමින් පවතිනවා..."; sleep 30; done' &
+        KEEP_ALIVE_PID=$!        
+        
+        # 5. පැරණි කැඩුණු Cache ඉවත් කර බිල්ඩ් එක පිරිසිදු කිරීම
+        buildozer android clean || true
+        
+        # 6. පළමුව Play Store සඳහා .aab එක නිපදවීම
+        sed -i 's/android.release_artifact = apk/android.release_artifact = aab/g' buildozer.spec
+        yes | buildozer android release
+        
+        # 7. දෙවනුව ජංගම දුරකථනයට දැමීමට .apk එක නිපදවීම
+        sed -i 's/android.release_artifact = aab/android.release_artifact = apk/g' buildozer.spec
+        yes | buildozer android debug
+        
+        # 8. Keep-Alive ක්‍රියාවලිය නතර කිරීම
+        kill $KEEP_ALIVE_PID
+      continue-on-error: false
 
     - name: Upload Production AAB (For Google Play Store)
       uses: actions/upload-artifact@v4
