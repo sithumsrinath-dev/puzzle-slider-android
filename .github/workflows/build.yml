@@ -1,4 +1,4 @@
-name: Production Android Build (Keep-Alive & Export Grade)
+name: Android Build Error Diagnostic Mode
 
 on:
   push:
@@ -6,10 +6,8 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
-    runs-on: ubuntu-22.04  # වඩාත් ස්ථාවර සහ Android බිල්ඩ් සඳහා හොඳින්ම ගැළපෙන පද්ධතිය
-    timeout-minutes: 120
-
+  diagnose:
+    runs-on: ubuntu-22.04
     steps:
     - name: Checkout Code
       uses: actions/checkout@v4
@@ -38,56 +36,21 @@ jobs:
           python3-pip python3-dev libncurses5-dev libsqlite3-dev libgdbm-dev libbz2-dev \
           libjpeg-dev zlib1g-dev appstream autotools-dev
 
-    - name: Build Android App inside Virtual Environment
+    - name: Run Buildozer with Full Debug Logging
       run: |
-        # 1. ස්වාධීන Python Virtual Environment එකක් සකසා ගැනීම
         python -m venv venv
         source venv/bin/activate
-        
-        # 2. අවශ්‍ය මෙවලම් පද්ධතිය ස්ථාපනය කිරීම
         pip install --upgrade pip
         pip install --upgrade Cython==3.0.10 "buildozer>=1.5.0" virtualenv setuptools wheel
         
-        # 3. GitHub Actions සර්වර් එකේ පරිසර විචල්‍යයන් නිවැරදිව පෙන්වීම
-        export ANDROID_HOME=$ANDROID_HOME_ROOT
-        export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH
+        # 👑 [පද්ධතියෙන්ම හේතුව ඇසීම]
+        # මෙහි log_level=2 දමා ඇති නිසා සිදුවන හැම සියුම් දේම පෙන්වයි.
+        # තවද '|| true' දමා ඇති නිසා බිල්ඩ් එක Fail වුණත් සර්වර් එක එතනින්ම නවතින්නේ නැතුව Error එක පෙන්වනවා.
+        buildozer android debug --verbose || true
         
-        # 4. පද්ධතියේ ඇති Android SDK බලපත්‍ර පිළිගැනීම
-        mkdir -p ~/.android
-        touch ~/.android/repositories.cfg
-        yes | sdkmanager --licenses || true
+        echo "========================================================="
+        echo "❌❌ බිල්ඩ් එක නතර වීමට හේතුව (Actual Error Log) පහතින් බලන්න: ❌❌"
+        echo "========================================================="
         
-        # 5. පසුබිම් Keep-Alive සංඥාව සක්‍රීය කිරීම
-        bash -c 'while true; do echo "⏳ [Keep-Alive] සර්වර් එක සක්‍රීයයි... බිල්ඩ් එක සිදුවෙමින් පවතිනවා..."; sleep 30; done' &
-        KEEP_ALIVE_PID=$!        
-        
-        # 6. පැරණි කැඩුණු Cache ඉවත් කර බිල්ඩ් එක පිරිසිදු කිරීම
-        buildozer android clean || true
-        
-        # 👑 [EXIT CODE 100 සඳහා වන අවසන් මහා විසඳුම] 👑
-        # බිල්ඩ් එක සිදුවන අතරතුර Buildozer විසින් අලුතින් සාදන සියලුම Android SDK බලපත්‍ර 
-        # 'yes |' විධානය මඟින් ස්වයංක්‍රීයවම (Non-interactive) පිළිගැනීමට සලස්වා ඇත.
-        
-        # පළමුව Play Store සඳහා .aab එක නිපදවීම
-        sed -i 's/android.release_artifact = apk/android.release_artifact = aab/g' buildozer.spec
-        yes | buildozer android release
-        
-        # දෙවණුව ජංගම දුරකථනයට දැමීමට .apk එක නිපදවීම
-        sed -i 's/android.release_artifact = aab/android.release_artifact = apk/g' buildozer.spec
-        yes | buildozer android debug
-        
-        # 7. Keep-Alive ක්‍රියාවලිය නතර කිරීම
-        kill $KEEP_ALIVE_PID
-      continue-on-error: false
-
-    - name: Upload Production AAB (For Google Play Store)
-      uses: actions/upload-artifact@v4
-      with:
-        name: Play-Store-Production-Bundle-AAB
-        path: bin/*.aab
-
-    - name: Upload Testing APK (For your Mobile Phone)
-      uses: actions/upload-artifact@v4
-      with:
-        name: Testing-App-APK
-        path: bin/*.apk
+        # බිල්ඩ් එක කැඩෙන්න හේතු වුණු අවසන් පේළි 100 Terminal එකට ගෙන්වා ගැනීම
+        tail -n 100 ~/.buildozer/buildozer.log || echo "Buildozer log file not found."
