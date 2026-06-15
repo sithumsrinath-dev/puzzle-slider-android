@@ -48,35 +48,35 @@ jobs:
         pip install --upgrade pip
         pip install --upgrade Cython==3.0.10 "buildozer>=1.5.0" virtualenv setuptools wheel
         
-        # 👑 [Exit Code 100 සඳහා ස්ථිර විසඳුම] 👑
-        # GitHub Actions වල ඇති නිවැරදිම Android SDK පථයන් (Paths) හඳුන්වා දීම
+        # 3. GitHub Actions සර්වර් එකේ පරිසර විචල්‍යයන් නිවැරදිව පෙන්වීම
         export ANDROID_HOME=$ANDROID_HOME_ROOT
         export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH
         
-        # 3. Android SDK බලපත්‍ර (Licenses) නිවැරදිව සහ බලහත්කාරයෙන් පිළිගැනීම
+        # 4. පද්ධතියේ ඇති Android SDK බලපත්‍ර පිළිගැනීම
         mkdir -p ~/.android
         touch ~/.android/repositories.cfg
-        
-        echo "⏳ [Licenses] ඇන්ඩ්‍රොයිඩ් බලපත්‍ර පිළිගනිමින් පවතී..."
         yes | sdkmanager --licenses || true
-        yes | sdkmanager --update || true
         
-        # 4. පසුබිම් Keep-Alive සංඥාව සක්‍රීය කිරීම
+        # 5. පසුබිම් Keep-Alive සංඥාව සක්‍රීය කිරීම
         bash -c 'while true; do echo "⏳ [Keep-Alive] සර්වර් එක සක්‍රීයයි... බිල්ඩ් එක සිදුවෙමින් පවතිනවා..."; sleep 30; done' &
         KEEP_ALIVE_PID=$!        
         
-        # 5. පැරණි කැඩුණු Cache ඉවත් කර බිල්ඩ් එක පිරිසිදු කිරීම
+        # 6. පැරණි කැඩුණු Cache ඉවත් කර බිල්ඩ් එක පිරිසිදු කිරීම
         buildozer android clean || true
         
-        # 6. පළමුව Play Store සඳහා .aab එක නිපදවීම
+        # 👑 [EXIT CODE 100 සඳහා වන අවසන් මහා විසඳුම] 👑
+        # බිල්ඩ් එක සිදුවන අතරතුර Buildozer විසින් අලුතින් සාදන සියලුම Android SDK බලපත්‍ර 
+        # 'yes |' විධානය මඟින් ස්වයංක්‍රීයවම (Non-interactive) පිළිගැනීමට සලස්වා ඇත.
+        
+        # පළමුව Play Store සඳහා .aab එක නිපදවීම
         sed -i 's/android.release_artifact = apk/android.release_artifact = aab/g' buildozer.spec
         yes | buildozer android release
         
-        # 7. දෙවනුව ජංගම... දුරකථනයට දැමීමට .apk එක නිපදවීම
+        # දෙවණුව ජංගම දුරකථනයට දැමීමට .apk එක නිපදවීම
         sed -i 's/android.release_artifact = aab/android.release_artifact = apk/g' buildozer.spec
         yes | buildozer android debug
         
-        # 8. Keep-Alive ක්‍රියාවලිය නතර කිරීම
+        # 7. Keep-Alive ක්‍රියාවලිය නතර කිරීම
         kill $KEEP_ALIVE_PID
       continue-on-error: false
 
