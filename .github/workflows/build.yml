@@ -40,7 +40,7 @@ jobs:
 
     - name: Build Android App inside Virtual Environment
       run: |
-        # 1. ස්වාධීන Python Virtual Environment එකක් සකසා ගැනීම (PIP වැරදි මඟහරවයි)
+        # 1. ස්වාධීන Python Virtual Environment එකක් සකසා ගැනීම
         python -m venv venv
         source venv/bin/activate
         
@@ -48,10 +48,18 @@ jobs:
         pip install --upgrade pip
         pip install --upgrade Cython==3.0.10 "buildozer>=1.5.0" virtualenv setuptools wheel
         
-        # 3. Android SDK බලපත්‍ර (Licenses) ස්වයංක්‍රීයව පිළිගැනීම
+        # 👑 [Exit Code 100 සඳහා ස්ථිර විසඳුම] 👑
+        # GitHub Actions වල ඇති නිවැරදිම Android SDK පථයන් (Paths) හඳුන්වා දීම
+        export ANDROID_HOME=$ANDROID_HOME_ROOT
+        export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH
+        
+        # 3. Android SDK බලපත්‍ර (Licenses) නිවැරදිව සහ බලහත්කාරයෙන් පිළිගැනීම
         mkdir -p ~/.android
         touch ~/.android/repositories.cfg
-        yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses || true
+        
+        echo "⏳ [Licenses] ඇන්ඩ්‍රොයිඩ් බලපත්‍ර පිළිගනිමින් පවතී..."
+        yes | sdkmanager --licenses || true
+        yes | sdkmanager --update || true
         
         # 4. පසුබිම් Keep-Alive සංඥාව සක්‍රීය කිරීම
         bash -c 'while true; do echo "⏳ [Keep-Alive] සර්වර් එක සක්‍රීයයි... බිල්ඩ් එක සිදුවෙමින් පවතිනවා..."; sleep 30; done' &
@@ -64,7 +72,7 @@ jobs:
         sed -i 's/android.release_artifact = apk/android.release_artifact = aab/g' buildozer.spec
         yes | buildozer android release
         
-        # 7. දෙවනුව ජංගම දුරකථනයට දැමීමට .apk එක නිපදවීම
+        # 7. දෙවනුව ජංගම... දුරකථනයට දැමීමට .apk එක නිපදවීම
         sed -i 's/android.release_artifact = aab/android.release_artifact = apk/g' buildozer.spec
         yes | buildozer android debug
         
