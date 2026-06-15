@@ -1,4 +1,4 @@
-name: Production Android Build (Final Ultimate Fix)
+name: Production Android Build (Memory Optimized)
 
 on:
   push:
@@ -47,25 +47,21 @@ jobs:
         pip install --upgrade pip
         pip install --upgrade Cython==3.0.10 "buildozer>=1.5.0" virtualenv setuptools wheel
         
-        # 👑 [රන්වන් විසඳුම - SDK පථ නිවැරදි කිරීම] 👑
-        # Buildozer හට අවශ්‍ය Android SDK ෆෝල්ඩරය කලින්ම සාදා ගැනීම
+        # GitHub SDK එක සම්බන්ධ කිරීම
         mkdir -p ~/.buildozer/android/platform/
-        
-        # GitHub සර්වර් එකේ දැනටමත් තියෙන නිල Android SDK එක 
-        # Buildozer එක පාවිච්චි කරන ෆෝල්ඩරයට කෙලින්ම සම්බන්ධ (Symlink) කිරීම.
-        # මෙයින් අලුතින් SDK ඩවුන්ලෝඩ් වීම් සහ 'sdkmanager not found' ප්‍රශ්න ඔක්කොම නැතිවෙයි!
         ln -s $ANDROID_HOME_ROOT ~/.buildozer/android/platform/android-sdk
         
-        # පද්ධතියට නිවැරදි cmdline-tools පථය පෙන්වා දීම
         export ANDROID_HOME=$ANDROID_HOME_ROOT
         export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH
         
-        # සියලුම ඇන්ඩ්‍රොයිඩ් ලයිසන් කලින්ම පිළිගැනීම
         mkdir -p ~/.android
         touch ~/.android/repositories.cfg
         yes | sdkmanager --licenses || true
         
-        # 👑 [FIXED] පළමු වතාවේදී 'FileNotFoundError' එකක් නොදීමට 'clean' විධානය ඉවත් කර ඇත
+        # 👑 [RAM OPTIMIZATION - CRITICAL FIX] 👑
+        # buildozer.spec එක ඇතුළේ තියෙන android.archs එක වෙනස් කර RAM එක සුරැකීම.
+        # සර්වර් එක ක්‍රෑෂ් කරන armeabi-v7a (32-bit) ඉවත් කර, arm64-v8a (64-bit) පමණක් ඉතිරි කරයි.
+        sed -i 's/android.archs = .*/android.archs = arm64-v8a/g' buildozer.spec
         
         # පළමුව Play Store සඳහා .aab එක නිපදවීම
         sed -i 's/android.release_artifact = apk/android.release_artifact = aab/g' buildozer.spec
