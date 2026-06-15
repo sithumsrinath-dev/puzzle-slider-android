@@ -1,4 +1,4 @@
-name: Production Android Build (Ultimate License Injector)
+name: Production Android Build (Final Ultimate Fix)
 
 on:
   push:
@@ -47,36 +47,33 @@ jobs:
         pip install --upgrade pip
         pip install --upgrade Cython==3.0.10 "buildozer>=1.5.0" virtualenv setuptools wheel
         
-        # 👑 [එක්සිට් කෝඩ් 1 සඳහා වන අවසන් මහා විසඳුම - LICENSE INJECTION] 👑
-        # Buildozer එක විසින් අනාගතයේදී සාදන සියලුම SDK පථ කලින්ම නිර්මාණය කිරීම
-        mkdir -p ~/.android
-        touch ~/.android/repositories.cfg
+        # 👑 [රන්වන් විසඳුම - SDK පථ නිවැරදි කිරීම] 👑
+        # Buildozer හට අවශ්‍ය Android SDK ෆෝල්ඩරය කලින්ම සාදා ගැනීම
+        mkdir -p ~/.buildozer/android/platform/
         
-        mkdir -p ~/.buildozer/android/platform/android-sdk/licenses
+        # GitHub සර්වර් එකේ දැනටමත් තියෙන නිල Android SDK එක 
+        # Buildozer එක පාවිච්චි කරන ෆෝල්ඩරයට කෙලින්ම සම්බන්ධ (Symlink) කිරීම.
+        # මෙයින් අලුතින් SDK ඩවුන්ලෝඩ් වීම් සහ 'sdkmanager not found' ප්‍රශ්න ඔක්කොම නැතිවෙයි!
+        ln -s $ANDROID_HOME_ROOT ~/.buildozer/android/platform/android-sdk
         
-        # Google සමාගමේ නිල ලයිසන් කේතයන් (Hashes) කෙලින්ම Buildozer SDK එක ඇතුළට ලිවීම.
-        # මෙයින් බිල්ඩ් එක අතරතුර Buildozer එකට කිසිදු ලයිසන් ප්‍රශ්නයක් ඇසීමට නොහැකි වන සේ වසා දමයි!
-        echo -e "\n8933bad161ad4178b1185d1a37fbf41ea5269c55\nd56f5187479451eabf01fb74313026e2281db3b1\n26466f859b3d67422608aed8e42e771469e46129\n27444d5e98ccac854336c3444b25166164a6b320" > ~/.buildozer/android/platform/android-sdk/licenses/android-sdk-license
-        echo -e "\n84831b9409646a547e30e308b27748e3644a8359\n96462b0474b90a8c17c1778d099310116d22a55c" > ~/.buildozer/android/platform/android-sdk/licenses/android-googletv-license
-        echo -e "\n33b6a2b64bcbee1d2d1ff2453e122d647e19308d" > ~/.buildozer/android/platform/android-sdk/licenses/android-sdk-preview-license
-        echo -e "\ne9ac30d073106fab8e7c4c34d2673a6a6673422e" > ~/.buildozer/android/platform/android-sdk/licenses/android-sdk-arm-dbt-license
-        echo -e "\n6072092b530cdaa6bc383c317aa0de11f14ec236" > ~/.buildozer/android/platform/android-sdk/licenses/glass-license
-        echo -e "\ngarmin-mfa-2020-license" > ~/.buildozer/android/platform/android-sdk/licenses/mips-android-sysimage-license
-        
-        # පද්ධතියේ (Global) ඇති ලයිසන් ද පිළිගෙන තැබීම
+        # පද්ධතියට නිවැරදි cmdline-tools පථය පෙන්වා දීම
         export ANDROID_HOME=$ANDROID_HOME_ROOT
         export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH
+        
+        # සියලුම ඇන්ඩ්‍රොයිඩ් ලයිසන් කලින්ම පිළිගැනීම
+        mkdir -p ~/.android
+        touch ~/.android/repositories.cfg
         yes | sdkmanager --licenses || true
         
-        # පැරණි කැඩුණු ලොග් හෝ Cache ඇත්නම් ඒවා පිරිසිදු කිරීම
-        buildozer android clean || true
+        # 👑 [FIXED] පළමු වතාවේදී 'FileNotFoundError' එකක් නොදීමට 'clean' විධානය ඉවත් කර ඇත
         
-        # 🚀 නිල වශයෙන් .aab සහ .apk බිල්ඩ් කිරීම අරඹන්න
+        # පළමුව Play Store සඳහා .aab එක නිපදවීම
         sed -i 's/android.release_artifact = apk/android.release_artifact = aab/g' buildozer.spec
-        buildozer android release
+        yes | buildozer android release
         
+        # දෙවනුව ජංගම දුරකථනයට දැමීමට .apk එක නිපදවීම
         sed -i 's/android.release_artifact = aab/android.release_artifact = apk/g' buildozer.spec
-        buildozer android debug
+        yes | buildozer android debug
         
       continue-on-error: false
 
