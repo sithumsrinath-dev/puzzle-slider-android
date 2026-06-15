@@ -1,4 +1,4 @@
-name: Android Build Error Diagnostic Mode
+name: Production Android Build (Fixed Dependencies)
 
 on:
   push:
@@ -6,8 +6,10 @@ on:
   workflow_dispatch:
 
 jobs:
-  diagnose:
+  build:
     runs-on: ubuntu-22.04
+    timeout-minutes: 120
+
     steps:
     - name: Checkout Code
       uses: actions/checkout@v4
@@ -26,31 +28,56 @@ jobs:
     - name: Install System Dependencies
       run: |
         sudo apt-get update
+        # 👑 [FIXED] මෙතනින් කැඩුණු gstreamer1.0-doc පැකේජ් එක සම්පූර්ණයෙන්ම ඉවත් කර ඇත
         sudo apt-get install -y --no-install-recommends \
           build-essential ccache git libffi-dev libssl-dev \
           libltdl-dev libgstreamer1.0-dev gstreamer1.0-plugins-base \
           gstreamer1.0-plugins-good gstreamer1.0-plugins-bad \
-          gstreamer1.0-plugins-ugly gstreamer1.0-libav gstreamer1.0-doc \
+          gstreamer1.0-plugins-ugly gstreamer1.0-libav \
           libgstreamer-plugins-base1.0-dev unzip zip openjdk-17-jdk \
           autoconf libtool pkg-config zlib1g-dev python3-setuptools \
           python3-pip python3-dev libncurses5-dev libsqlite3-dev libgdbm-dev libbz2-dev \
           libjpeg-dev zlib1g-dev appstream autotools-dev
 
-    - name: Run Buildozer with Full Debug Logging
+    - name: Build Android App inside Virtual Environment
       run: |
         python -m venv venv
         source venv/bin/activate
+        
         pip install --upgrade pip
         pip install --upgrade Cython==3.0.10 "buildozer>=1.5.0" virtualenv setuptools wheel
         
-        # 👑 [පද්ධතියෙන්ම හේතුව ඇසීම]
-        # මෙහි log_level=2 දමා ඇති නිසා සිදුවන හැම සියුම් දේම පෙන්වයි.
-        # තවද '|| true' දමා ඇති නිසා බිල්ඩ් එක Fail වුණත් සර්වර් එක එතනින්ම නවතින්නේ නැතුව Error එක පෙන්වනවා.
-        buildozer android debug --verbose || true
+        export ANDROID_HOME=$ANDROID_HOME_ROOT
+        export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH
         
-        echo "========================================================="
-        echo "❌❌ බිල්ඩ් එක නතර වීමට හේතුව (Actual Error Log) පහතින් බලන්න: ❌❌"
-        echo "========================================================="
+        mkdir -p ~/.android
+        touch ~/.android/repositories.cfg
+        yes | sdkmanager --licenses || true
         
-        # බිල්ඩ් එක කැඩෙන්න හේතු වුණු අවසන් පේළි 100 Terminal එකට ගෙන්වා ගැනීම
-        tail -n 100 ~/.buildozer/buildozer.log || echo "Buildozer log file not found."
+        bash -c 'while true; do echo "⏳ [Keep-Alive] සර්වර් එක සක්‍රීයයි... බිල්ඩ් එක සිදුවෙමින් පවතිනවා..."; sleep 30; done' &
+        KEEP_ALIVE_PID=$!        
+        
+        buildozer android clean || true
+        
+        # පළමුව Play Store සඳහා .aab එක නිපදවීම
+        sed -i 's/android.release_artifact = apk/android.release_artifact = aab/g' buildozer.spec
+        yes | buildozer android release
+        
+        # දෙවනුව ජංගම දුරකථනයට දැමීමට .apk එක නිපදවීම
+        sed -i 's/android.release_artifact = aab/android.release_artifact = apk/g' buildozer.spec
+        yes | buildozer android debug
+        
+        kill $KEEP_ALIVE_PID
+      continue-on-error: false
+
+    - name: Upload Production AAB (For Google Play Store)
+      uses: actions/upload-artifact@v4
+      with:
+        name: Play-Store-Production-Bundle-AAB
+        path: bin/*.aab
+
+    - name: Upload Testing APK (For your Mobile Phone)
+      uses: actions/upload-artifact@v4
+      with:
+        name: Testing-App-APK
+        path: bin/*.apk
