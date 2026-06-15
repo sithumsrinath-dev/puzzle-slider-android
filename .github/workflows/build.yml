@@ -35,7 +35,8 @@ jobs:
           gstreamer1.0-plugins-ugly gstreamer1.0-libav gstreamer1.0-doc \
           libgstreamer-plugins-base1.0-dev unzip zip openjdk-17-jdk \
           autoconf libtool pkg-config zlib1g-dev python3-setuptools \
-          python3-pip python3-dev libncurses5-dev libsqlite3-dev libgdbm-dev libbz2-dev
+          python3-pip python3-dev libncurses5-dev libsqlite3-dev libgdbm-dev libbz2-dev \
+          libjpeg-dev zlib1g-dev  # Pillow (KivyMD Graphics) සඳහා අත්‍යවශ්‍ය පැකේජ මෙන්න
 
     - name: Install Python Build Tools
       run: |
@@ -64,11 +65,10 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: Play-Store-Production-Bundle-AAB
-        path: .buildozer/android/platform/build-arm64-v8a_armeabi-v7a/dists/*/*.aab
+        path: bin/*.aab
 
     - name: Upload Testing APK (For your Mobile Phone)
       uses: actions/upload-artifact@v4
       with:
         name: Testing-App-APK
         path: bin/*.apk
-    
