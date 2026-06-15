@@ -7,8 +7,8 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-24.04  # අලුත්ම සහ ස්ථාවරම පද්ධතිය
-    timeout-minutes: 120   # පැය 2ක් යනකම් සර්වර් එකට මැරෙන්න දෙන්නේ නැහැ
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
 
     steps:
     - name: Checkout Code
@@ -36,14 +36,14 @@ jobs:
           libgstreamer-plugins-base1.0-dev unzip zip openjdk-17-jdk \
           autoconf libtool pkg-config zlib1g-dev python3-setuptools \
           python3-pip python3-dev libncurses5-dev libsqlite3-dev libgdbm-dev libbz2-dev \
-          libjpeg-dev zlib1g-dev  # Pillow (KivyMD Graphics) සඳහා අත්‍යවශ්‍ය පැකේජ මෙන්න
+          libjpeg-dev zlib1g-dev appstream
 
     - name: Install Python Build Tools
       run: |
         python -m pip install --upgrade pip
-        pip install --upgrade Cython==3.0.10 "buildozer>=1.5.0" virtualenv
+        pip install --upgrade Cython==3.0.10 "buildozer>=1.5.0" virtualenv setuptools wheel
 
-    - name: Accept Android SDK Licenses  # 👑 Exit Code 100 විසඳන රන්වන් පියවර මෙන්න 👑
+    - name: Accept Android SDK Licenses
       run: |
         mkdir -p ~/.android
         touch ~/.android/repositories.cfg
@@ -51,6 +51,9 @@ jobs:
 
     - name: Build Android Artifacts with Keep-Alive Signal
       run: |
+        # Buildozer පැරණි කැඩුණු Cache ගොනු ඇත්නම් ඒවා ඉවත් කිරීම
+        buildozer android clean || true
+        
         # 1. සර්වර් එක නොනවත්වා ක්‍රියාත්මක කර තැබීමේ පසුබිම් සංඥාව (Keep-Alive)
         bash -c 'while true; do echo "⏳ [Keep-Alive] සර්වර් එක සක්‍රීයයි... බිල්ඩ් එක සිදුවෙමින් පවතිනවා..."; sleep 30; done' &
         KEEP_ALIVE_PID=$!        
