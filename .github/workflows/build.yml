@@ -1,4 +1,4 @@
-name: Production Android Build (Fixed Dependencies)
+name: Production Android Build (Fixed Unmet Dependencies)
 
 on:
   push:
@@ -28,8 +28,9 @@ jobs:
     - name: Install System Dependencies
       run: |
         sudo apt-get update
-        # 👑 [FIXED] මෙතනින් කැඩුණු gstreamer1.0-doc පැකේජ් එක සම්පූර්ණයෙන්ම ඉවත් කර ඇත
+        # 👑 [FIXED] පද්ධතිය ඉල්ලා සිටි libunwind-dev පැකේජ් එක මුලටම එකතු කර ඇත
         sudo apt-get install -y --no-install-recommends \
+          libunwind-dev \
           build-essential ccache git libffi-dev libssl-dev \
           libltdl-dev libgstreamer1.0-dev gstreamer1.0-plugins-base \
           gstreamer1.0-plugins-good gstreamer1.0-plugins-bad \
