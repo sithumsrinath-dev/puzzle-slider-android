@@ -1,4 +1,4 @@
-name: Production Android Build (Anti-Timeout Edition)
+name: Production Android Build (Silent & Stable)
 
 on:
   push:
@@ -47,7 +47,7 @@ jobs:
         pip install --upgrade pip
         pip install --upgrade Cython==3.0.10 "buildozer>=1.5.0" virtualenv setuptools wheel
         
-        # GitHub SDK එක සම්බන්ධ කිරීම
+        # SDK සම්බන්ධ කිරීම
         mkdir -p ~/.buildozer/android/platform/
         ln -s $ANDROID_HOME_ROOT ~/.buildozer/android/platform/android-sdk
         
@@ -61,23 +61,19 @@ jobs:
         # Architecture එක 64-bit වලට සීමා කිරීම
         sed -i 's/android.archs = .*/android.archs = arm64-v8a/g' buildozer.spec
         
-        # 👑 [ANTI-TIMEOUT KEEP-ALIVE] 👑
-        # GitHub සර්වර් එකට පේළි වැසුනත්, පසුබිමෙන් සෑම තත්පර 30කට වරක්ම පණිවිඩයක් ප්‍රින්ට් කර 
-        # සර්වර් එක Timeout වී ක්‍රෑෂ් වීම වළක්වන ආරක්ෂිත පද්ධතියක් සක්‍ရීය කිරීම.
-        (while true; do echo "⏳ [Keep-Alive] බිල්ඩ් එක තවමත් පසුබිමෙන් සිදුවෙමින් පවතිනවා... කරුණාකර රැඳී සිටින්න..."; sleep 30; done) &
-        LOG_PID=$!
+        # 👑 [CRITICAL FIXED - SILENT BUILD WITH LOGGING] 👑
+        # අපි බිල්ඩ් ලොග් එක කෙලින්ම build_log.txt ගොනුවට ලියනවා. 
+        # එතකොට සර්වර් එකේ 'Truncated' හෝ 'Timeout' ප්‍රශ්න කිසිවක් මතු වෙන්නේ නැහැ.
         
-        # පළමුව Play Store සඳහා .aab එක නිපදවීම
+        echo "🚀 Play Store සඳහා .aab බිල්ඩ් එක ආරම්භ වුණා..."
         sed -i 's/android.release_artifact = apk/android.release_artifact = aab/g' buildozer.spec
-        yes | buildozer android release
+        yes | buildozer android release > build_log.txt 2>&1
         
-        # දෙවනුව ජංගම දුරකථනයට දැමීමට .apk එක නිපදවීම
+        echo "🚀 ෆෝන් එක සඳහා .apk බිල්ඩ් එක ආරම්භ වුණා..."
         sed -i 's/android.release_artifact = aab/android.release_artifact = apk/g' buildozer.spec
-        yes | buildozer android debug
+        yes | buildozer android debug >> build_log.txt 2>&1
         
-        # බිල්ඩ් එක ඉවර වූ පසු පසුබිම් පණිවිඩ පද්ධතිය නතර කිරීම
-        kill $LOG_PID
-        
+        echo "✅ බිල්ඩ් පියවර සාර්ථකව අවසන්!"
       continue-on-error: false
 
     - name: Upload Production AAB (For Google Play Store)
@@ -91,3 +87,10 @@ jobs:
       with:
         name: Testing-App-APK
         path: bin/*.apk
+
+    - name: Upload Build Logs (If anything goes wrong)
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: Build-Full-Terminal-Logs
+        path: build_log.txt
