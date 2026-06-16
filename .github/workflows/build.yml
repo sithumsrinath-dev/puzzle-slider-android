@@ -25,38 +25,41 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
             build-essential ccache git libffi-dev libssl-dev \
-            autoconf automake libtool pkg-config zlib1g-dev \
+            autoconf automake libtool patch pkg-config zlib1g-dev \
             libgstreamer1.0-dev gstreamer1.0-plugins-base gstreamer1.0-plugins-good \
             libsqlite3-dev sqlite3 bzip2 libbz2-dev liblzma-dev \
-            libreadline-dev libgdbm-dev libdb5.3-dev libpcap-dev unzip openjdk-17-jdk
+            libreadline-dev libgdbm-dev libdb5.3-dev libpcap-dev unzip openjdk-17-jdk \
+            gettext autopoint M4
 
       - name: Install Buildozer and Cython
         run: |
           pip install --upgrade pip
           pip install buildozer cython==3.0.10 kivy
 
-      - name: Fix Android SDK Layout for Buildozer (CRITICAL STEP)
-        # Buildozer සොයන පැරණි tools/bin මාර්ගය සාදා එය නව cmdline-tools වෙත ලින්ක් කිරීම
+      - name: Fix Android SDK Layout & Configure M4 Macros (CRITICAL FIX)
+        # Ubuntu 24 පරිසරයේ libtool macros නිවැරදිව හඳුනා ගැනීමට සහ sdkmanager පියවර සැකසීම
         run: |
           echo "ANDROID_HOME=$ANDROID_HOME" >> $GITHUB_ENV
           echo "JAVA_HOME=$JAVA_HOME_17_X64" >> $GITHUB_ENV
           
-          # Buildozer රවටා ගැනීමට අවශ්‍ය tools/bin ෆෝල්ඩරය කෘතිමව සෑදීම
-          mkdir -p /usr/local/lib/android/sdk/tools/bin
+          # Autoconf වෙත පද්ධතියේ පවතින libtool m4 ගොනු ඇති ස්ථානය බලහත්කාරයෙන් පෙන්වීම
+          echo "ACLOCAL_PATH=/usr/share/aclocal" >> $GITHUB_ENV
+          export ACLOCAL_PATH=/usr/share/aclocal
           
-          # පද්ධතියේ පවතින සැබෑ sdkmanager එක, Buildozer සොයන තැනට ලින්ක් (Symlink) කිරීම
+          # Buildozer සඳහා අවශ්‍ය ව්‍යුහය සකස් කිරීම
+          mkdir -p /usr/local/lib/android/sdk/tools/bin
           if [ -f "/usr/local/lib/android/sdk/cmdline-tools/latest/bin/sdkmanager" ]; then
             ln -sf /usr/local/lib/android/sdk/cmdline-tools/latest/bin/sdkmanager /usr/local/lib/android/sdk/tools/bin/sdkmanager
           elif [ -f "/usr/local/lib/android/sdk/cmdline-tools/11.0/bin/sdkmanager" ]; then
             ln -sf /usr/local/lib/android/sdk/cmdline-tools/11.0/bin/sdkmanager /usr/local/lib/android/sdk/tools/bin/sdkmanager
           fi
           
-          # සියලුම බලපත්‍ර (Licenses) ස්වයංක්‍රීයව පිළිගැනීම
           yes | /usr/local/lib/android/sdk/tools/bin/sdkmanager --licenses || true
 
       - name: Build Android App Bundle (Release AAB)
         run: |
-          # මෙවර Buildozer එකට tools/bin/sdkmanager එක 100%ක්ම හමුවන නිසා සාර්ථකව build වේ
+          # ACLOCAL_PATH එක මෙහිදීද සක්‍රීයව පවතින බව තහවුරු කර බිල්ඩ් එක ධාවනය කිරීම
+          export ACLOCAL_PATH=/usr/share/aclocal
           buildozer android release
 
       - name: Upload Production Artifact
