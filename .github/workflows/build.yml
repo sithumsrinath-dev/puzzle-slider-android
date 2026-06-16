@@ -1,4 +1,4 @@
-name: Production Android Build (Debug Mode)
+name: Production Android Build (Buildozer Path Fix)
 
 on:
   push:
@@ -47,30 +47,37 @@ jobs:
         pip install --upgrade pip
         pip install --upgrade Cython==3.0.10 "buildozer>=1.5.0" virtualenv setuptools wheel
         
-        # SDK පථය සැකසීම
+        # GitHub නිල පථයන් (Paths) පරිසරයට එකතු කිරීම
         export ANDROID_HOME=/usr/local/lib/android/sdk
-        export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$ANDROID_HOME/tools/bin:$PATH
-        
-        mkdir -p ~/.buildozer/android/platform/
-        rm -rf ~/.buildozer/android/platform/android-sdk || true
-        ln -s $ANDROID_HOME ~/.buildozer/android/platform/android-sdk
+        export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH
         
         # ලයිසන් නිශ්ශබ්දව පිළිගැනීම
         mkdir -p ~/.android
         touch ~/.android/repositories.cfg
         yes 2>/dev/null | sdkmanager --licenses > /dev/null 2>&1 || true
         
+        # 👑 [රන්වන් විසඳුම - BUILDOZER SPEC එකට පථයන් එන්නත් කිරීම] 👑
+        # Buildozer එකට සර්වර් එක ඇතුළේ SDK එක හොයන්න දෙන්නේ නැතුව, 
+        # spec එක ඇතුළටම නිවැරදි නිල පථයන් (Paths) ලියා දීම.
+        sed -i "s|#android.sdk_path =.*|android.sdk_path = /usr/local/lib/android/sdk|g" buildozer.spec
+        sed -i "s|# android.sdk_path =.*|android.sdk_path = /usr/local/lib/android/sdk|g" buildozer.spec
+        
         # Architecture එක 64-bit වලට සීමා කිරීම
         sed -i 's/android.archs = .*/android.archs = arm64-v8a/g' buildozer.spec
         
-        # 👑 [SHOW REAL ERROR] 👑
-        # මෙදා පාර අපි ලොග්ස් හංගන්නේ නැහැ. බිල්ඩ් එක පටන් ගත්තු ගමන් එන 
-        # මුල්ම වැරැද්ද (Error) මොකක්ද කියලා Terminal එකේම බලාගමු!
+        # 👑 [ANTI-TIMEOUT - LOGS REDIRECTION] 👑
+        # මෙවර බිල්ඩ් එක දිගටම යන නිසා ලොග්ස් වැසීම වැළැක්වීමට File එකකට ලියමු.
+        touch build_log.txt
         
-        echo "🚀 Play Store සඳහා .aab බිල්ඩ් එක ආරම්භ වුණා..."
+        echo "🚀 Play Store සඳහා .aab බිල්ඩ් එක ආරම්භ වුණා... (විනාඩි 15-20ක් පමණ ගතවේ)"
         sed -i 's/android.release_artifact = apk/android.release_artifact = aab/g' buildozer.spec
-        buildozer android release
+        buildozer android release > build_log.txt 2>&1
         
+        echo "🚀 ෆෝන් එක සඳහා .apk බිල්ඩ් එක ආරම්භ වුණා..."
+        sed -i 's/android.release_artifact = aab/android.release_artifact = apk/g' buildozer.spec
+        buildozer android debug >> build_log.txt 2>&1
+        
+        echo "✅ බිල්ඩ් පියවර සාර්ථකව අවසන්!"
       continue-on-error: false
 
     - name: Upload Production AAB (For Google Play Store)
@@ -78,3 +85,16 @@ jobs:
       with:
         name: Play-Store-Production-Bundle-AAB
         path: bin/*.aab
+
+    - name: Upload Testing APK (For your Mobile Phone)
+      uses: actions/upload-artifact@v4
+      with:
+        name: Testing-App-APK
+        path: bin/*.apk
+
+    - name: Upload Build Logs (If anything goes wrong)
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: Build-Full-Terminal-Logs
+        path: build_log.txt
