@@ -1,107 +1,51 @@
-name: Production Android Build (Pipe-Safe Fix)
+name: Build Android App with Buildozer
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
   workflow_dispatch:
 
 jobs:
   build:
-    runs-on: ubuntu-22.04
-    timeout-minutes: 60
+    runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout Code
-      uses: actions/checkout@v4
+      - name: Checkout Code
+        uses: actions/checkout@v4
 
-    - name: Setup Java JDK 17
-      uses: actions/setup-java@v4
-      with:
-        distribution: 'temurin'
-        java-version: '17'
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
 
-    - name: Set up Python 3.11
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.11'
+      - name: Install System Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential ccache git libffi-dev libssl-dev \
+            autoconf automake libtool pkg-config zlib1g-dev \
+            libgstreamer1.0-dev gstreamer1.0-plugins-base gstreamer1.0-plugins-good \
+            libsqlite3-dev sqlite3 bzip2 libbz2-dev liblzma-dev \
+            libreadline-dev libgdbm-dev libdb5.3-dev libpcap-dev unzip
 
-    - name: Install System Dependencies
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y --no-install-recommends \
-          libunwind-dev \
-          build-essential ccache git libffi-dev libssl-dev \
-          libltdl-dev libgstreamer1.0-dev gstreamer1.0-plugins-base \
-          gstreamer1.0-plugins-good gstreamer1.0-plugins-bad \
-          gstreamer1.0-plugins-ugly gstreamer1.0-libav \
-          libgstreamer-plugins-base1.0-dev unzip zip openjdk-17-jdk \
-          autoconf libtool pkg-config zlib1g-dev python3-setuptools \
-          python3-pip python3-dev libncurses5-dev libsqlite3-dev libgdbm-dev libbz2-dev \
-          libjpeg-dev zlib1g-dev appstream autotools-dev
+      - name: Install Buildozer and Cython
+        run: |
+          pip install --upgrade pip
+          pip install buildozer cython==3.0.10 kivy
 
-    - name: Build Android App inside Virtual Environment
-      run: |
-        python -m venv venv
-        source venv/bin/activate
-        
-        pip install --upgrade pip
-        pip install --upgrade Cython==3.0.10 "buildozer>=1.5.0" virtualenv setuptools wheel
-        
-        # GitHub නිල පථයන් පරිසරයට එකතු කිරීම
-        export ANDROID_HOME=/usr/local/lib/android/sdk
-        export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH
-        
-        # 👑 [SAFE LICENSE ACCEPTANCE - NO MORE BROKEN PIPES] 👑
-        # Broken pipe ඇති කරන 'yes' විධානය වෙනුවට 100% ක් සුරක්ෂිත ක්‍රමයකට ලයිසන් ෆයිල් එකක් සෑදීම.
-        mkdir -p ~/.android
-        touch ~/.android/repositories.cfg
-        
-        echo "⏳ සියලුම Android SDK ලයිසන් පිළිගනිමින් පවතිනවා..."
-        mkdir -p "$ANDROID_HOME/licenses"
-        echo -e "\n244d24e21dade28d6eca5e1926574c3e34926b37" > "$ANDROID_HOME/licenses/android-sdk-license"
-        echo -e "\n84831b9409646a918e30573bab4c9c91346d8abd" > "$ANDROID_HOME/licenses/android-sdk-preview-license"
-        
-        # 👑 [CLEAN PRE-INSTALLATION] 👑
-        # ලයිසන් ප්‍රශ්න මඟහැර සෘජුවම Build-Tools ස්ථාපනය කිරීම
-        echo "⏳ Build-Tools 37 ස්ථාපනය කරමින් පවතිනවා..."
-        sdkmanager "build-tools;37.0.0" "platforms;android-34" --channel=0 > /dev/null 2>&1 || true
-        
-        # Buildozer.spec එකට නිවැරදි SDK පථය ලබාදීම
-        sed -i "s|#android.sdk_path =.*|android.sdk_path = /usr/local/lib/android/sdk|g" buildozer.spec
-        sed -i "s|# android.sdk_path =.*|android.sdk_path = /usr/local/lib/android/sdk|g" buildozer.spec
-        
-        # Architecture එක 64-bit වලට සීමා කිරීම
-        sed -i 's/android.archs = .*/android.archs = arm64-v8a/g' buildozer.spec
-        
-        # 👑 [ANTI-TIMEOUT LOGS] 👑
-        touch build_log.txt
-        
-        echo "🚀 Play Store සඳහා .aab බිල්ඩ් එක ආරම්භ වුණා... (විනාඩි 15-20ක් පමණ ගතවේ)"
-        sed -i 's/android.release_artifact = apk/android.release_artifact = aab/g' buildozer.spec
-        buildozer android release > build_log.txt 2>&1
-        
-        echo "🚀 ෆෝන් එක සඳහා .apk බිල්ඩ් එක ආරම්භ වුණා..."
-        sed -i 's/android.release_artifact = aab/android.release_artifact = apk/g' buildozer.spec
-        buildozer android debug >> build_log.txt 2>&1
-        
-        echo "✅ බිල්ඩ් පියවර සාර්ථකව අවසන්!"
-      continue-on-error: false
+      - name: Set up Android SDK & NDK Environment
+        run: |
+          echo "android.sdk_path = /usr/local/lib/android/sdk" >> buildozer.spec
 
-    - name: Upload Production AAB (For Google Play Store)
-      uses: actions/upload-artifact@v4
-      with:
-        name: Play-Store-Production-Bundle-AAB
-        path: bin/*.aab
+      - name: Build Android App Bundle (Release AAB)
+        run: |
+          # Play Store එකට දැමීමට release ආකාරයෙන් build කරනු ලැබේ
+          buildozer android release
 
-    - name: Upload Testing APK (For your Mobile Phone)
-      uses: actions/upload-artifact@v4
-      with:
-        name: Testing-App-APK
-        path: bin/*.apk
-
-    - name: Upload Build Logs (If anything goes wrong)
-      if: always()
-      uses: actions/upload-artifact@v4
-      with:
-        name: Build-Full-Terminal-Logs
-        path: build_log.txt
+      - name: Upload Production Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sliding-puzzle-release-aab
+          path: bin/*.aab
