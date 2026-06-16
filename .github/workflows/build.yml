@@ -1,4 +1,4 @@
-name: Production Android Build (Memory Optimized)
+name: Production Android Build (Anti-Timeout Edition)
 
 on:
   push:
@@ -58,10 +58,14 @@ jobs:
         touch ~/.android/repositories.cfg
         yes | sdkmanager --licenses || true
         
-        # 👑 [RAM OPTIMIZATION - CRITICAL FIX] 👑
-        # buildozer.spec එක ඇතුළේ තියෙන android.archs එක වෙනස් කර RAM එක සුරැකීම.
-        # සර්වර් එක ක්‍රෑෂ් කරන armeabi-v7a (32-bit) ඉවත් කර, arm64-v8a (64-bit) පමණක් ඉතිරි කරයි.
+        # Architecture එක 64-bit වලට සීමා කිරීම
         sed -i 's/android.archs = .*/android.archs = arm64-v8a/g' buildozer.spec
+        
+        # 👑 [ANTI-TIMEOUT KEEP-ALIVE] 👑
+        # GitHub සර්වර් එකට පේළි වැසුනත්, පසුබිමෙන් සෑම තත්පර 30කට වරක්ම පණිවිඩයක් ප්‍රින්ට් කර 
+        # සර්වර් එක Timeout වී ක්‍රෑෂ් වීම වළක්වන ආරක්ෂිත පද්ධතියක් සක්‍ရීය කිරීම.
+        (while true; do echo "⏳ [Keep-Alive] බිල්ඩ් එක තවමත් පසුබිමෙන් සිදුවෙමින් පවතිනවා... කරුණාකර රැඳී සිටින්න..."; sleep 30; done) &
+        LOG_PID=$!
         
         # පළමුව Play Store සඳහා .aab එක නිපදවීම
         sed -i 's/android.release_artifact = apk/android.release_artifact = aab/g' buildozer.spec
@@ -70,6 +74,9 @@ jobs:
         # දෙවනුව ජංගම දුරකථනයට දැමීමට .apk එක නිපදවීම
         sed -i 's/android.release_artifact = aab/android.release_artifact = apk/g' buildozer.spec
         yes | buildozer android debug
+        
+        # බිල්ඩ් එක ඉවර වූ පසු පසුබිම් පණිවිඩ පද්ධතිය නතර කිරීම
+        kill $LOG_PID
         
       continue-on-error: false
 
