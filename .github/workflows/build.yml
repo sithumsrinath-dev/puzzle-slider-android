@@ -39,9 +39,16 @@ jobs:
         run: |
           echo "android.sdk_path = /usr/local/lib/android/sdk" >> buildozer.spec
 
+      - name: Auto Accept Android SDK Licenses (Fix License Agreement Error)
+        run: |
+          # Buildozer මඟින් Android SDK බාගත කිරීමේදී බලපත්‍ර ගිවිසුම් ස්වයංක්‍රීයව පිළිගැනීමට (Accept) අවශ්‍ය සැකසුම්
+          mkdir -p ~/.buildozer/android/platform/android-sdk/licenses
+          echo -e "\n893a5cd87b77841e70a1a8292dd7d21789ff14a8\n24333f1a50b3b8226ce1944e95d722294079351d\nd56f5187479451eabf01fb743130245313540553\n2662a02f61310b6a81d3662b34c8da29e797bfb1\n3510e68c38b2a4e51c016258f55555206fac9d0d\ne6b7c2ab3fa2298c1516f7d2a3bf031711b847a2\n84831b9409646a918e30573bab4c9c91346d8abd" > ~/.buildozer/android/platform/android-sdk/licenses/android-sdk-license
+          echo -e "\n84831b9409646a918e30573bab4c9c91346d8abd" > ~/.buildozer/android/platform/android-sdk/licenses/android-sdk-preview-license
+
       - name: Build Android App Bundle (Release AAB)
         run: |
-          # Play Store එකට දැමීමට release ආකාරයෙන් build කරනු ලැබේ
+          # Google Play Store සඳහා බිල්ඩ් එක සකස් කිරීම
           buildozer android release
 
       - name: Upload Production Artifact
