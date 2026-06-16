@@ -28,27 +28,33 @@ jobs:
             autoconf automake libtool pkg-config zlib1g-dev \
             libgstreamer1.0-dev gstreamer1.0-plugins-base gstreamer1.0-plugins-good \
             libsqlite3-dev sqlite3 bzip2 libbz2-dev liblzma-dev \
-            libreadline-dev libgdbm-dev libdb5.3-dev libpcap-dev unzip
+            libreadline-dev libgdbm-dev libdb5.3-dev libpcap-dev unzip openjdk-17-jdk
 
       - name: Install Buildozer and Cython
         run: |
           pip install --upgrade pip
           pip install buildozer cython==3.0.10 kivy
 
-      - name: Set up Android SDK & NDK Environment
+      - name: Setup Android SDK Env Variables
+        # GitHub Runner එකේ දැනටමත් තිබෙන නිල Android SDK සහ Java මාර්ග පරිසර විචල්‍යයන් ලෙස පද්ධතියට එක් කිරීම
         run: |
-          echo "android.sdk_path = /usr/local/lib/android/sdk" >> buildozer.spec
+          echo "ANDROID_HOME=$ANDROID_HOME" >> $GITHUB_ENV
+          echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk-bundle" >> $GITHUB_ENV
+          echo "JAVA_HOME=$JAVA_HOME_17_X64" >> $GITHUB_ENV
 
-      - name: Auto Accept Android SDK Licenses (Fix License Agreement Error)
+      - name: Auto Accept Android SDK Licenses & Fix SDK Manager
+        # Buildozer එකට වැඩ කිරීමට අවශ්‍ය පද්ධතිමය ෆෝල්ඩර් සහ බලපත්‍ර කලින්ම නිර්මාණය කිරීම
         run: |
-          # Buildozer මඟින් Android SDK බාගත කිරීමේදී බලපත්‍ර ගිවිසුම් ස්වයංක්‍රීයව පිළිගැනීමට (Accept) අවශ්‍ය සැකසුම්
           mkdir -p ~/.buildozer/android/platform/android-sdk/licenses
+          cp -r $ANDROID_HOME/licenses/* ~/.buildozer/android/platform/android-sdk/licenses/ || true
+          
+          # බලපත්‍ර කේතයන් අතින්ද ස්ථාවරව තැන්පත් කිරීම
           echo -e "\n893a5cd87b77841e70a1a8292dd7d21789ff14a8\n24333f1a50b3b8226ce1944e95d722294079351d\nd56f5187479451eabf01fb743130245313540553\n2662a02f61310b6a81d3662b34c8da29e797bfb1\n3510e68c38b2a4e51c016258f55555206fac9d0d\ne6b7c2ab3fa2298c1516f7d2a3bf031711b847a2\n84831b9409646a918e30573bab4c9c91346d8abd" > ~/.buildozer/android/platform/android-sdk/licenses/android-sdk-license
           echo -e "\n84831b9409646a918e30573bab4c9c91346d8abd" > ~/.buildozer/android/platform/android-sdk/licenses/android-sdk-preview-license
 
       - name: Build Android App Bundle (Release AAB)
         run: |
-          # Google Play Store සඳහා බිල්ඩ් එක සකස් කිරීම
+          # බිල්ඩර් එක ධාවනය කිරීම - මෙවර sdkmanager ගැටලුව මතු නොවේ
           buildozer android release
 
       - name: Upload Production Artifact
