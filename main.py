@@ -29,6 +29,7 @@ class SlidingPuzzleGame(BoxLayout):
         super(SlidingPuzzleGame, self).__init__(orientation='vertical', **kwargs)
         
         self.lock_frame = None
+        self.lock_ad_button = None  # <-- මේ පේළිය අලුතින්ම එකතු කරන්න
         
         # Load Secure Local Storage
         file_path = 'game_secure_state.json'
@@ -597,6 +598,15 @@ class SlidingPuzzleGame(BoxLayout):
             self.lock_frame.bg_gloss.pos = (instance.x + 5, instance.y + instance.height * 0.55)
             self.lock_frame.bg_gloss.size = (instance.width - 10, instance.height * 0.4)
             self.lock_frame.bg_line.rounded_rectangle = (instance.x, instance.y, instance.width, instance.height, 25)
+            if self.lock_ad_button is not None:
+                self.lock_ad_button.btn_line.rounded_rectangle = (self.lock_ad_button.x, self.lock_ad_button.y, self.lock_ad_button.width, self.lock_ad_button.height, 16)
+                self.lock_ad_button.bg_shadow.pos = (self.lock_ad_button.x, self.lock_ad_button.y - 5)
+                self.lock_ad_button.bg_shadow.size = self.lock_ad_button.size
+                self.lock_ad_button.bg_rect.pos = self.lock_ad_button.pos
+                self.lock_ad_button.bg_rect.size = self.lock_ad_button.size
+                self.lock_ad_button.bg_gloss.pos = (self.lock_ad_button.x + 3, self.lock_ad_button.y + self.lock_ad_button.height * 0.55)
+                self.lock_ad_button.bg_gloss.size = (self.lock_ad_button.width - 6, self.lock_ad_button.height * 0.4)
+
         self.lock_frame.bind(pos=update_frame_bounds, size=update_frame_bounds)
         
         title_lbl = Label(text="LEVEL LOCKED", font_size='22sp', bold=True, color=(0, 1, 1, 1), size_hint_y=0.2)
@@ -630,16 +640,6 @@ class SlidingPuzzleGame(BoxLayout):
             Color(0.4, 0.85, 1, 0.7)
             self.lock_ad_button.btn_line = Line(rounded_rectangle=(self.lock_ad_button.x, self.lock_ad_button.y, self.lock_ad_button.width, self.lock_ad_button.height, 16), width=1.5)
             
-        def update_btn_bounds(instance, value):
-            instance.btn_line.rounded_rectangle = (instance.x, instance.y, instance.width, instance.height, 16)
-            instance.bg_shadow.pos = (instance.x, instance.y - 5)
-            instance.bg_shadow.size = instance.size
-            instance.bg_rect.pos = instance.pos
-            instance.bg_rect.size = instance.size
-            instance.bg_gloss.pos = (instance.x + 3, instance.y + instance.height * 0.55)
-            instance.bg_gloss.size = (instance.width - 6, instance.height * 0.4)
-        self.lock_ad_button.bind(pos=update_btn_bounds, size=update_btn_bounds)
-        
         self.lock_frame.add_widget(title_lbl)
         self.lock_frame.add_widget(msg_lbl)
         self.lock_frame.add_widget(status_lbl)
@@ -649,22 +649,7 @@ class SlidingPuzzleGame(BoxLayout):
 
     def network_failed(self, request, error):
         self.internet_available = False
-        if self.lock_frame is None:
-            self.network_success(None, None)
-            
-        if not hasattr(self, 'alert_label') or self.alert_label.parent is None:
-            self.alert_label = Label(
-                text=f"Connection Error: Punishment Ad cannot load. Please check your internet connection to unlock Level {self.current_level}!",
-                font_size='13sp',
-                bold=True,
-                color=(1, 0, 0.2, 1),
-                halign='center',
-                valign='middle',
-                size_hint_y=0.08
-            )
-            self.alert_label.bind(size=self.alert_label.setter('text_size'))
-            self.lock_frame.add_widget(self.alert_label)
-            Clock.schedule_once(self.clear_alert_label, 2.0)
+        self.initialize_level(reset_attempts=True)
 
     def clear_alert_label(self, dt):
         if hasattr(self, 'alert_label') and self.alert_label.parent:
@@ -749,13 +734,12 @@ class SlidingPuzzleGame(BoxLayout):
         with open(file_path, 'w') as f:
             f.write(encrypted_string)
 
-class UltimateSlidingPuzzleApp(App):
+class SliderApp(App):
     def build(self):
-        # ඇප් එක ඕපන් වන වේගය උපරිම කිරීමට Window Frame එක කලින්ම සක්‍රීය කිරීම
         if platform == 'android':
-            Window.bind(resize=lambda *args: True) # on_resize වෙනුවට resize ලෙස වෙනස් කලයුතුයි.
+            Window.bind(on_resize=lambda *args: True)
         self.title = "Ultimate Sliding Puzzle"
         return SlidingPuzzleGame()
 
 if __name__ == '__main__':
-    UltimateSlidingPuzzleApp().run()
+    SliderApp().run()
