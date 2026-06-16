@@ -41,10 +41,6 @@ android.target_api = 34
 # (int) Minimum API your APK/AAB will support.
 android.minapi = 21
 
-# (str) Android NDK version to use (Stable for Kivy 2.3.0 + SDK 34)
-android.ndk = 26b
-android.ndk_api = 21
-
 # (bool) Use --private data storage (recommended)
 android.private_storage = True
 
@@ -57,8 +53,12 @@ android.archs = arm64-v8a, armeabi-v7a
 # (bool) Skip byte compile for .py files
 android.skip_byte_compile = False
 
-# (str) The Android card id to features, for Google Play Billing metadata
-# android.features = 
+# =============================================================================
+# CRITICAL PATH FIX FOR GITHUB ACTIONS SDK MANAGER ERROR
+# =============================================================================
+# GitHub සර්වර් එකේ ඇති නිල SDK සහ NDK මාර්ග ඍජුවම බලාගැනීමට සලස්වා ඇත.
+android.sdk_path = /usr/local/lib/android/sdk
+android.ndk_path = /usr/local/lib/android/sdk/ndk-bundle
 
 # =============================================================================
 # Buildozer configurations
