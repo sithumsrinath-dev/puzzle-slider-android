@@ -1,4 +1,4 @@
-name: Production Android Build (Silent & Stable)
+name: Production Android Build (Strict Path Fix)
 
 on:
   push:
@@ -47,25 +47,29 @@ jobs:
         pip install --upgrade pip
         pip install --upgrade Cython==3.0.10 "buildozer>=1.5.0" virtualenv setuptools wheel
         
-        # SDK සම්බන්ධ කිරීම
+        # 👑 [රන්වන් විසඳුම - GitHub නිල Android SDK පථය සෘජුවම ලබාදීම] 👑
+        export ANDROID_HOME=/usr/local/lib/android/sdk
+        export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$ANDROID_HOME/tools/bin:$PATH
+        
+        # Buildozer සඳහා SDK එක Link කිරීම
         mkdir -p ~/.buildozer/android/platform/
-        ln -s $ANDROID_HOME_ROOT ~/.buildozer/android/platform/android-sdk
+        rm -rf ~/.buildozer/android/platform/android-sdk || true
+        ln -s $ANDROID_HOME ~/.buildozer/android/platform/android-sdk
         
-        export ANDROID_HOME=$ANDROID_HOME_ROOT
-        export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH
-        
+        # ලයිසන් සියල්ල නිල වශයෙන් පිළිගැනීම
         mkdir -p ~/.android
         touch ~/.android/repositories.cfg
+        
+        echo "⏳ Android Licenses පිළිගනිමින් පවතිනවා..."
         yes | sdkmanager --licenses || true
         
         # Architecture එක 64-bit වලට සීමා කිරීම
         sed -i 's/android.archs = .*/android.archs = arm64-v8a/g' buildozer.spec
         
-        # 👑 [CRITICAL FIXED - SILENT BUILD WITH LOGGING] 👑
-        # අපි බිල්ඩ් ලොග් එක කෙලින්ම build_log.txt ගොනුවට ලියනවා. 
-        # එතකොට සර්වර් එකේ 'Truncated' හෝ 'Timeout' ප්‍රශ්න කිසිවක් මතු වෙන්නේ නැහැ.
+        # 🤫 [SILENT BUILD WITH LOGGING] 🤫
+        # සර්වර් එකේ ලොග්ස් හිරවීම් වැළැක්වීමට සියල්ල ගොනුවකට ලියනු ලැබේ.
         
-        echo "🚀 Play Store සඳහා .aab බිල්ඩ් එක ආරම්භ වුණා..."
+        echo "🚀 Play Store සඳහා .aab බිල්ඩ් එක ආරම්භ වුණා (මෙයට විනාඩි 15ක් පමණ ගතවේ)..."
         sed -i 's/android.release_artifact = apk/android.release_artifact = aab/g' buildozer.spec
         yes | buildozer android release > build_log.txt 2>&1
         
