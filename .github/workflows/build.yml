@@ -36,12 +36,24 @@ jobs:
           pip install --upgrade pip
           pip install buildozer cython==3.0.10 kivy
 
-      - name: Configure Android SDK & Overwrite Core Recipes (CRITICAL)
+      - name: Patch Incompatible Libffi Recipe (ROOT FIX)
+        # We find python-for-android's internal source files and swap out the broken 3.4.4 version for 3.4.6, 
+        # which fixes the broken macro parsing bug entirely.
+        run: |
+          P4A_RECIPE_DIR=$(python -c "import os, pythonforandroid as p4a; print(os.path.dirname(p4a.__file__))")/recipes/libffi
+          if [ -f "$P4A_RECIPE_DIR/__init__.py" ]; then
+            echo "Patching python-for-android libffi recipe version template..."
+            sed -i 's/version = "3.4.4"/version = "3.4.6"/g' "$P4A_RECIPE_DIR/__init__.py"
+            sed -i 's/version = '\''3.4.4'\''/version = '\''3.4.6'\''/g' "$P4A_RECIPE_DIR/__init__.py"
+          else
+            echo "Recipe direct file not found where expected, falling back to clean injection..."
+          fi
+
+      - name: Configure Android SDK Layout
         run: |
           echo "ANDROID_HOME=$ANDROID_HOME" >> $GITHUB_ENV
           echo "JAVA_HOME=$JAVA_HOME_17_X64" >> $GITHUB_ENV
           
-          # SDK Tools ව්‍යුහය සැකසීම
           mkdir -p /usr/local/lib/android/sdk/tools/bin
           if [ -f "/usr/local/lib/android/sdk/cmdline-tools/latest/bin/sdkmanager" ]; then
             ln -sf /usr/local/lib/android/sdk/cmdline-tools/latest/bin/sdkmanager /usr/local/lib/android/sdk/tools/bin/sdkmanager
@@ -52,10 +64,9 @@ jobs:
           yes | /usr/local/lib/android/sdk/tools/bin/sdkmanager --licenses || true
 
       - name: Build Android App Bundle (Release AAB)
-        # P4A_libffi_android පරිසර විචල්‍යය හරහා Buildozer හට අභ්‍යන්තර බිල්ඩ් එක මඟ හැරීමට බල කිරීම
         run: |
-          export P4A_libffi_android=1
-          export APP_ALLOW_MISSING_PREBUILT_LIBS=true
+          # Keep global fallbacks active alongside the target template patch
+          export ACLOCAL_PATH="/usr/share/aclocal"
           buildozer android release
 
       - name: Upload Production Artifact
