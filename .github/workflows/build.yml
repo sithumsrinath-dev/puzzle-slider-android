@@ -23,27 +23,27 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-buildozer-
 
-      - name: Build Android App Bundle via Docker (STABLE PRODUCTION MODE)
-        # 1. BUILDOZER_WARN_ON_ROOT=0 මඟින් root අනතුරු ඇඟවීම් සහ [y/n] ප්‍රශ්න මුළුමනින්ම අක්‍රීය කරයි.
-        # 2. Container එක සාමාන්‍ය පරිදි root ලෙස ධාවනය වන බැවින් කිසිදු chown දෝෂයක් මතු නොවේ.
-        # 3. බිල්ඩ් එකෙන් පසු Runner එකට ගොනු හැසිරවීමට හැකි වනු පිණිස අවසානයේ අවසර (Permissions) නිවැරදි කරනු ලබයි.
+      - name: Build Android App Bundle via Docker Container
+        # 1. --entrypoint "" මඟින් Image එක ඇතුළේ ඇති අවසර (Permission) පරීක්ෂා කරන කේත මඟහරියි.
+        # 2. env BUILDOZER_WARN_ON_ROOT=0 මඟින් [y/n] ප්‍රශ්න ඇසීම මුළුමනින්ම නවත්වයි.
+        # 3. buildozer android release මඟින් කෙලින්ම AAB ගොනුව නිෂ්පාදනය කරයි.
         run: |
           docker run --rm \
-            -e BUILDOZER_WARN_ON_ROOT=0 \
+            --entrypoint "" \
             -v ${{ github.workspace }}:/home/user/hostdir \
             -v ~/.buildozer:/home/user/.buildozer \
             kivy/buildozer:latest \
-            android release
+            /bin/bash -c "env BUILDOZER_WARN_ON_ROOT=0 buildozer android release"
 
-      - name: Fix Workspace Permissions for GitHub Runner
-        # Docker එක root ලෙස ධාවනය වූ නිසා නිපදවුණු ගොනුවල අයිතිය නැවත GitHub Runner වෙත පැවරීම
+      - name: Fix Workspace Permissions for GitHub Actions Artifacts
+        # Docker එක root ලෙස දිවීම නිසා ලොක් වූ ගොනුවල අයිතිය නැවත GitHub Runner වෙත පැවරීම
         if: always()
         run: |
           sudo chown -R $USER:$USER ${{ github.workspace }}
           sudo chown -R $USER:$USER ~/.buildozer || true
 
-      - name: Upload Production Artifact
+      - name: Upload Production Android Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: sliding-puzzle-release-aab
+          name: ultimate-sliding-puzzle-release
           path: bin/*.aab
