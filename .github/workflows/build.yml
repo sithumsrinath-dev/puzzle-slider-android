@@ -36,21 +36,12 @@ jobs:
           pip install --upgrade pip
           pip install buildozer cython==3.0.10 kivy
 
-      - name: Fix Autoconf Macro Paths (THE ULTIMATE FIX)
-        # Buildozer එක අපේ පරිසර විචල්‍යයන් මැකුවත් ක්‍රෑෂ් නොවීමට, මැක්‍රෝස් ගොනු ගෝලීය ෆෝල්ඩරයටම කොපි කිරීම
-        run: |
-          sudo cp /usr/share/aclocal/libtool.m4 /usr/share/autoconf/autoconf/ || true
-          sudo cp /usr/share/aclocal/ltoptions.m4 /usr/share/autoconf/autoconf/ || true
-          sudo cp /usr/share/aclocal/ltsugar.m4 /usr/share/autoconf/autoconf/ || true
-          sudo cp /usr/share/aclocal/ltversion.m4 /usr/share/autoconf/autoconf/ || true
-          sudo cp /usr/share/aclocal/lt~obsolete.m4 /usr/share/autoconf/autoconf/ || true
-
-      - name: Fix Android SDK Layout for Buildozer
+      - name: Fix Android SDK Layout & Patch System Flags
         run: |
           echo "ANDROID_HOME=$ANDROID_HOME" >> $GITHUB_ENV
           echo "JAVA_HOME=$JAVA_HOME_17_X64" >> $GITHUB_ENV
           
-          # Buildozer සඳහා අවශ්‍ය ව්‍යුහය සකස් කිරීම
+          # Prepare SDK directory infrastructure for Buildozer
           mkdir -p /usr/local/lib/android/sdk/tools/bin
           if [ -f "/usr/local/lib/android/sdk/cmdline-tools/latest/bin/sdkmanager" ]; then
             ln -sf /usr/local/lib/android/sdk/cmdline-tools/latest/bin/sdkmanager /usr/local/lib/android/sdk/tools/bin/sdkmanager
@@ -61,11 +52,13 @@ jobs:
           yes | /usr/local/lib/android/sdk/tools/bin/sdkmanager --licenses || true
 
       - name: Build Android App Bundle (Release AAB)
+        # Force system include paths directly into the overarching compile environment
         run: |
+          export ACLOCAL_PATH="/usr/share/aclocal"
+          export M4="m4"
+          export AUTOCONF="/usr/bin/autoconf"
+          export AUTOMAKE="/usr/bin/automake"
+          export ACLOCAL="aclocal -I /usr/share/aclocal"
+          
+          # Execute compilation with explicit environment injection
           buildozer android release
-
-      - name: Upload Production Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: sliding-puzzle-release-aab
-          path: bin/*.aab
