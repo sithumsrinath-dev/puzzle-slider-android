@@ -36,14 +36,19 @@ jobs:
           pip install --upgrade pip
           pip install buildozer cython==3.0.10 kivy
 
-      - name: Fix Android SDK Layout & Autoconf Environment (CRITICAL PATCH)
-        # Buildozer අභ්‍යන්තරව සිදු කරන autoreconf ක්‍රියාවලිය පද්ධතියේ මෙවලම් වෙත Force කිරීම
+      - name: Fix Autoconf Macro Paths (THE ULTIMATE FIX)
+        # Buildozer එක අපේ පරිසර විචල්‍යයන් මැකුවත් ක්‍රෑෂ් නොවීමට, මැක්‍රෝස් ගොනු ගෝලීය ෆෝල්ඩරයටම කොපි කිරීම
+        run: |
+          sudo cp /usr/share/aclocal/libtool.m4 /usr/share/autoconf/autoconf/ || true
+          sudo cp /usr/share/aclocal/ltoptions.m4 /usr/share/autoconf/autoconf/ || true
+          sudo cp /usr/share/aclocal/ltsugar.m4 /usr/share/autoconf/autoconf/ || true
+          sudo cp /usr/share/aclocal/ltversion.m4 /usr/share/autoconf/autoconf/ || true
+          sudo cp /usr/share/aclocal/lt~obsolete.m4 /usr/share/autoconf/autoconf/ || true
+
+      - name: Fix Android SDK Layout for Buildozer
         run: |
           echo "ANDROID_HOME=$ANDROID_HOME" >> $GITHUB_ENV
           echo "JAVA_HOME=$JAVA_HOME_17_X64" >> $GITHUB_ENV
-          
-          # ගෝලීයව Autoconf මැක්‍රෝස් හඳුන්වා දීම
-          echo "ACLOCAL_PATH=/usr/share/aclocal" >> $GITHUB_ENV
           
           # Buildozer සඳහා අවශ්‍ය ව්‍යුහය සකස් කිරීම
           mkdir -p /usr/local/lib/android/sdk/tools/bin
@@ -56,11 +61,7 @@ jobs:
           yes | /usr/local/lib/android/sdk/tools/bin/sdkmanager --licenses || true
 
       - name: Build Android App Bundle (Release AAB)
-        # ACLOCAL_PATH එක සහ පද්ධතිමය Flags මෙහිදී ධාවනය වන පරිසරයට බලහත්කාරයෙන් එන්නත් (Inject) කරනු ලැබේ
         run: |
-          export ACLOCAL_PATH=/usr/share/aclocal
-          export WANT_AUTOCONF=2.71
-          export WANT_AUTOMAKE=1.16
           buildozer android release
 
       - name: Upload Production Artifact
