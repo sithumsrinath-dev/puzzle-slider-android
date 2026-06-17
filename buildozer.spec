@@ -18,8 +18,8 @@ source.include_exts = py,png,jpg,kv,atlas,json
 version = 1.0.0
 
 # (list) Application requirements
-# Added openssl, requests, urllib3, and certifi for 100% secure stable UrlRequest
-requirements = python3,kivy==2.3.0,kivy-deps.angle,kivy-deps.glew,kivy-deps.sdl2,openssl,requests,urllib3,certifi
+# CRITICAL FIX: Windows සතු kivy-deps (angle, glew, sdl2) ඉවත් කර Android සඳහා නිවැරදි පැකේජ පමණක් ඇතුළත් කර ඇත.
+requirements = python3,kivy==2.3.0,openssl,requests,urllib3,certifi
 
 # (str) Supported orientations
 orientation = portrait
