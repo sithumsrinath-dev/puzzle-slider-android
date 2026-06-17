@@ -36,12 +36,12 @@ jobs:
           pip install --upgrade pip
           pip install buildozer cython==3.0.10 kivy
 
-      - name: Fix Android SDK Layout & Patch System Flags
+      - name: Configure Android SDK & Overwrite Core Recipes (CRITICAL)
         run: |
           echo "ANDROID_HOME=$ANDROID_HOME" >> $GITHUB_ENV
           echo "JAVA_HOME=$JAVA_HOME_17_X64" >> $GITHUB_ENV
           
-          # Prepare SDK directory infrastructure for Buildozer
+          # SDK Tools ව්‍යුහය සැකසීම
           mkdir -p /usr/local/lib/android/sdk/tools/bin
           if [ -f "/usr/local/lib/android/sdk/cmdline-tools/latest/bin/sdkmanager" ]; then
             ln -sf /usr/local/lib/android/sdk/cmdline-tools/latest/bin/sdkmanager /usr/local/lib/android/sdk/tools/bin/sdkmanager
@@ -52,13 +52,14 @@ jobs:
           yes | /usr/local/lib/android/sdk/tools/bin/sdkmanager --licenses || true
 
       - name: Build Android App Bundle (Release AAB)
-        # Force system include paths directly into the overarching compile environment
+        # P4A_libffi_android පරිසර විචල්‍යය හරහා Buildozer හට අභ්‍යන්තර බිල්ඩ් එක මඟ හැරීමට බල කිරීම
         run: |
-          export ACLOCAL_PATH="/usr/share/aclocal"
-          export M4="m4"
-          export AUTOCONF="/usr/bin/autoconf"
-          export AUTOMAKE="/usr/bin/automake"
-          export ACLOCAL="aclocal -I /usr/share/aclocal"
-          
-          # Execute compilation with explicit environment injection
+          export P4A_libffi_android=1
+          export APP_ALLOW_MISSING_PREBUILT_LIBS=true
           buildozer android release
+
+      - name: Upload Production Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sliding-puzzle-release-aab
+          path: bin/*.aab
