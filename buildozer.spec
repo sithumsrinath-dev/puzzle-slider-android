@@ -18,7 +18,6 @@ source.include_exts = py,png,jpg,kv,atlas,json
 version = 1.0.0
 
 # (list) Application requirements
-# Windows සතු kivy-deps ඉවත් කර Android සඳහා 100% ස්ථාවර පැකේජ පමණක් ඇතුළත් කර ඇත.
 requirements = python3,kivy==2.3.0,openssl,requests,urllib3,certifi
 
 # (str) Supported orientations
@@ -34,7 +33,7 @@ fullscreen = 1
 # (list) Permissions
 android.permissions = INTERNET, ACCESS_NETWORK_STATE
 
-# (int) Target Android API (Play Store 2026 Requirement - API 34)
+# (int) Target Android API (Play Store 2026 Target)
 android.api = 34
 android.target_api = 34
 
@@ -51,13 +50,6 @@ android.archs = arm64-v8a, armeabi-v7a
 android.skip_byte_compile = False
 
 # =============================================================================
-# Docker Engine Path Overrides
-# =============================================================================
-# Docker Container එක ඇතුළත පද්ධතිය විසින්ම ස්වයංක්‍රීයව කළමනාකරණය කරන නිවැරදි මාර්ගයන් යොදා ඇත.
-android.sdk_path = 
-android.ndk_path = 
-
-# =============================================================================
 # Buildozer configurations
 # =============================================================================
 
@@ -66,5 +58,4 @@ android.ndk_path =
 log_level = 2
 
 # (int) Display warning if buildozer is run as root (0 = False, 1 = True)
-# Root ප්‍රශ්න මඟහැරීමට මෙය අනිවාර්යයෙන්ම 0 විය යුතුය.
 warn_on_root = 0
