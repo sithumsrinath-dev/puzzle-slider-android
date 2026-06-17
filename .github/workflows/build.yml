@@ -1,4 +1,4 @@
-name: Build Android App with Buildozer
+name: Build Android App with Buildozer Docker
 
 on:
   push:
@@ -15,59 +15,22 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - name: Cache Buildozer Global Directory
+        uses: actions/cache@v4
         with:
-          python-version: '3.11'
+          path: .buildozer
+          key: ${{ runner.os }}-buildozer-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildozer-
 
-      - name: Install System Dependencies
+      - name: Build Android App Bundle via Docker (THE ULTIMATE FIX)
+        # Ubuntu 24.04 හි Autoconf ගැටලුව මඟහැරීමට නිල Buildozer Docker Container එක භාවිත කිරීම
         run: |
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends \
-            build-essential ccache git libffi-dev libssl-dev \
-            autoconf automake libtool patch pkg-config zlib1g-dev \
-            libgstreamer1.0-dev gstreamer1.0-plugins-base gstreamer1.0-plugins-good \
-            libsqlite3-dev sqlite3 bzip2 libbz2-dev liblzma-dev \
-            libreadline-dev libgdbm-dev libdb5.3-dev libpcap-dev unzip openjdk-17-jdk \
-            gettext autopoint m4 libtool-bin
-
-      - name: Install Buildozer and Cython
-        run: |
-          pip install --upgrade pip
-          pip install buildozer cython==3.0.10 kivy
-
-      - name: Patch Incompatible Libffi Recipe (ROOT FIX)
-        # We find python-for-android's internal source files and swap out the broken 3.4.4 version for 3.4.6, 
-        # which fixes the broken macro parsing bug entirely.
-        run: |
-          P4A_RECIPE_DIR=$(python -c "import os, pythonforandroid as p4a; print(os.path.dirname(p4a.__file__))")/recipes/libffi
-          if [ -f "$P4A_RECIPE_DIR/__init__.py" ]; then
-            echo "Patching python-for-android libffi recipe version template..."
-            sed -i 's/version = "3.4.4"/version = "3.4.6"/g' "$P4A_RECIPE_DIR/__init__.py"
-            sed -i 's/version = '\''3.4.4'\''/version = '\''3.4.6'\''/g' "$P4A_RECIPE_DIR/__init__.py"
-          else
-            echo "Recipe direct file not found where expected, falling back to clean injection..."
-          fi
-
-      - name: Configure Android SDK Layout
-        run: |
-          echo "ANDROID_HOME=$ANDROID_HOME" >> $GITHUB_ENV
-          echo "JAVA_HOME=$JAVA_HOME_17_X64" >> $GITHUB_ENV
-          
-          mkdir -p /usr/local/lib/android/sdk/tools/bin
-          if [ -f "/usr/local/lib/android/sdk/cmdline-tools/latest/bin/sdkmanager" ]; then
-            ln -sf /usr/local/lib/android/sdk/cmdline-tools/latest/bin/sdkmanager /usr/local/lib/android/sdk/tools/bin/sdkmanager
-          elif [ -f "/usr/local/lib/android/sdk/cmdline-tools/11.0/bin/sdkmanager" ]; then
-            ln -sf /usr/local/lib/android/sdk/cmdline-tools/11.0/bin/sdkmanager /usr/local/lib/android/sdk/tools/bin/sdkmanager
-          fi
-          
-          yes | /usr/local/lib/android/sdk/tools/bin/sdkmanager --licenses || true
-
-      - name: Build Android App Bundle (Release AAB)
-        run: |
-          # Keep global fallbacks active alongside the target template patch
-          export ACLOCAL_PATH="/usr/share/aclocal"
-          buildozer android release
+          docker run --rm \
+            -v ${{ github.workspace }}:/home/user/hostdir \
+            -v ~/.buildozer:/home/user/.buildozer \
+            kivy/buildozer:latest \
+            android release
 
       - name: Upload Production Artifact
         uses: actions/upload-artifact@v4
