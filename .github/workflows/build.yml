@@ -23,24 +23,26 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-buildozer-
 
-      - name: Build Android App Bundle via Docker Container
-        # 1. --entrypoint "" මඟින් Image එක ඇතුළේ ඇති අවසර (Permission) පරීක්ෂා කරන කේත මඟහරියි.
-        # 2. env BUILDOZER_WARN_ON_ROOT=0 මඟින් [y/n] ප්‍රශ්න ඇසීම මුළුමනින්ම නවත්වයි.
-        # 3. buildozer android release මඟින් කෙලින්ම AAB ගොනුව නිෂ්පාදනය කරයි.
+      - name: Create Local Buildozer Cache Directory and Fix Permissions
+        # Docker එක ඇතුළට යාමට පෙර, බාහිරින් සම්බන්ධ වන ෆෝල්ඩර සාදා ඒවාට Runner ගේ පූර්ණ අවසර ලබා දීම.
+        run: |
+          mkdir -p .buildozer-global
+          chmod -R 777 .buildozer-global
+          chmod -R 777 ${{ github.workspace }}
+
+      - name: Build Android App Bundle via User-Spoofed Docker Container
+        # 1. --entrypoint "" මඟින් Container එක පණගැන්වීමේදී සිදුවන chown පරීක්ෂාව මුළුමනින්ම මඟහරියි.
+        # 2. -u 1000:1000 මඟින් Buildozer හට පද්ධතිය සාමාන්‍ය පරිශීලකයෙකු (Non-root) ලෙස පෙන්වයි. (input() එක ක්‍රියාත්මක නොවේ!)
+        # 3. HOME=/tmp මඟින් අභ්‍යන්තර ලොක් වූ root ෆෝල්ඩර භාවිත කිරීම වළක්වා, අවසර ඇති ෆෝල්ඩරයක් ලබා දෙයි.
         run: |
           docker run --rm \
             --entrypoint "" \
+            -u 1000:1000 \
+            -e HOME=/tmp \
             -v ${{ github.workspace }}:/home/user/hostdir \
-            -v ~/.buildozer:/home/user/.buildozer \
+            -v ${{ github.workspace }}/.buildozer-global:/tmp/.buildozer \
             kivy/buildozer:latest \
-            /bin/bash -c "env BUILDOZER_WARN_ON_ROOT=0 buildozer android release"
-
-      - name: Fix Workspace Permissions for GitHub Actions Artifacts
-        # Docker එක root ලෙස දිවීම නිසා ලොක් වූ ගොනුවල අයිතිය නැවත GitHub Runner වෙත පැවරීම
-        if: always()
-        run: |
-          sudo chown -R $USER:$USER ${{ github.workspace }}
-          sudo chown -R $USER:$USER ~/.buildozer || true
+            /bin/bash -c "buildozer android release"
 
       - name: Upload Production Android Artifact
         uses: actions/upload-artifact@v4
