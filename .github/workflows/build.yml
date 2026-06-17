@@ -23,19 +23,25 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-buildozer-
 
-      - name: Build Android App Bundle via Docker (FULLY AUTOMATED UNATTENDED MODE)
-        # 1. -i (Interactive) සහ --entrypoint මඟින් Input Pipe එක කෙලින්ම Docker අභ්‍යන්තරයට සම්බන්ධ කරයි.
-        # 2. --user මඟින් root පරිශීලකයා වෙනුවට වත්මන් GitHub Runner පරිශීලකයාගේ හැඳුනුම් අංකය (UID/GID) ආදේශ කරයි.
-        # 3. මින් ඉදිරියට කිසිදු Root Error එකක් හෝ EOFError එකක් හට නොගනී.
+      - name: Build Android App Bundle via Docker (STABLE PRODUCTION MODE)
+        # 1. BUILDOZER_WARN_ON_ROOT=0 මඟින් root අනතුරු ඇඟවීම් සහ [y/n] ප්‍රශ්න මුළුමනින්ම අක්‍රීය කරයි.
+        # 2. Container එක සාමාන්‍ය පරිදි root ලෙස ධාවනය වන බැවින් කිසිදු chown දෝෂයක් මතු නොවේ.
+        # 3. බිල්ඩ් එකෙන් පසු Runner එකට ගොනු හැසිරවීමට හැකි වනු පිණිස අවසානයේ අවසර (Permissions) නිවැරදි කරනු ලබයි.
         run: |
-          mkdir -p .buildozer-global
-          yes y | docker run -i --rm \
-            -u "$(id -u):$(id -g)" \
+          docker run --rm \
+            -e BUILDOZER_WARN_ON_ROOT=0 \
             -v ${{ github.workspace }}:/home/user/hostdir \
-            -v ${{ github.workspace }}/.buildozer-global:/home/user/.buildozer \
+            -v ~/.buildozer:/home/user/.buildozer \
             kivy/buildozer:latest \
             android release
-            
+
+      - name: Fix Workspace Permissions for GitHub Runner
+        # Docker එක root ලෙස ධාවනය වූ නිසා නිපදවුණු ගොනුවල අයිතිය නැවත GitHub Runner වෙත පැවරීම
+        if: always()
+        run: |
+          sudo chown -R $USER:$USER ${{ github.workspace }}
+          sudo chown -R $USER:$USER ~/.buildozer || true
+
       - name: Upload Production Artifact
         uses: actions/upload-artifact@v4
         with:
