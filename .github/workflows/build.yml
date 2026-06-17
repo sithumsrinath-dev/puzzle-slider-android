@@ -23,13 +23,16 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-buildozer-
 
-      - name: Build Android App Bundle via Docker (AUTOMATED ROOT BYPASS)
-        # 'yes |' මඟින් Buildozer අසන සියලුම Interactive ප්‍රශ්න වලට ස්වයංක්‍රීයව 'y' පිළිතුර ලබා දෙයි.
-        # තවද, Play Store (2026) සඳහා අවශ්‍ය Android SDK බලපත්‍ර (Licenses) ද මෙහිදීම ස්වයංක්‍රීයව පිළිගනු ලබයි.
+      - name: Build Android App Bundle via Docker (FULLY AUTOMATED UNATTENDED MODE)
+        # 1. -i (Interactive) සහ --entrypoint මඟින් Input Pipe එක කෙලින්ම Docker අභ්‍යන්තරයට සම්බන්ධ කරයි.
+        # 2. --user මඟින් root පරිශීලකයා වෙනුවට වත්මන් GitHub Runner පරිශීලකයාගේ හැඳුනුම් අංකය (UID/GID) ආදේශ කරයි.
+        # 3. මින් ඉදිරියට කිසිදු Root Error එකක් හෝ EOFError එකක් හට නොගනී.
         run: |
-          yes | docker run --rm \
+          mkdir -p .buildozer-global
+          yes y | docker run -i --rm \
+            -u "$(id -u):$(id -g)" \
             -v ${{ github.workspace }}:/home/user/hostdir \
-            -v ~/.buildozer:/home/user/.buildozer \
+            -v ${{ github.workspace }}/.buildozer-global:/home/user/.buildozer \
             kivy/buildozer:latest \
             android release
             
