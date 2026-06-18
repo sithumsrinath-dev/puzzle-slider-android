@@ -29,8 +29,6 @@ jobs:
           chmod -R 777 .buildozer-global
 
       - name: Build Android App Bundle (STABLE ROOT MODE WITH INTERNAL PIPE)
-        # 1. -u 1000:1000 ඉවත් කර ඇත (Root ලෙස දිවෙන බැවින් Errno 13 Permission Denied නොපැමිණේ).
-        # 2. "yes y | buildozer" මඟින් Container එක ඇතුළතදීම Root අනතුරු ඇඟවීමට 'y' පිළිතුර ලබා දේ (EOFError මඟහරියි).
         run: |
           docker run --rm \
             --entrypoint "" \
@@ -41,7 +39,6 @@ jobs:
             /bin/bash -c "yes y | buildozer android release"
 
       - name: Fix Workspace Permissions for GitHub Actions Artifacts
-        # Root විසින් සෑදූ ගොනුවල අයිතිය නැවත GitHub Runner වෙත ලබා ගැනීම
         if: always()
         run: |
           sudo chown -R $USER:$USER ${{ github.workspace }}
