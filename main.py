@@ -255,6 +255,10 @@ class SlidingPuzzleGame(BoxLayout):
         self.add_widget(self.control_layout)
         
         self.initialize_level()
+        Clock.schedule_once(self.refresh_screen, 0.1)
+
+    def refresh_screen(self, *args):
+        pass
 
     def _update_rect(self, instance, value):
         self.rect.pos = instance.pos
