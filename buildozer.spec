@@ -18,7 +18,12 @@ source.include_exts = py,png,jpg,kv,atlas,json
 version = 1.0.0
 
 # (list) Application requirements
-requirements = python3,kivy==2.3.0,openssl,requests,urllib3,certifi
+# නව Cython 3 සමඟ ඇතිවන ගැටුම් වැළැක්වීමට cython==0.29.33 ලෙස එක් කර ඇත.
+requirements = python3,kivy==2.3.0,cython==0.29.33,openssl,requests,urllib3,certifi
+
+# (str) python-for-android branch to use, defaults to master
+# පද්ධතිය Python 3.14 වෙත යාවත්කාලීන වීම නැවැත්වීම සඳහා අතිශය ස්ථායී v2024.01.21 සංස්කරණයට අගුලු දමා ඇත.
+p4a.branch = v2024.01.21
 
 # (str) Supported orientations
 orientation = portrait
