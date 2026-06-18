@@ -43,8 +43,9 @@ android.minapi = 24
 # (bool) Use --private data storage (recommended)
 android.private_storage = True
 
-# (list) Architectures to build for (Play Store strictly requires arm64-v8a)
-android.archs = arm64-v8a, armeabi-v7a
+# (list) Architectures to build for 
+# Play Store strictly requires 64-bit arm64-v8a. armeabi-v7a ඉවත් කිරීමෙන් GitHub RAM Crash වීම වළක්වයි.
+android.archs = arm64-v8a
 
 # (bool) Skip byte compile for .py files
 android.skip_byte_compile = False
@@ -55,7 +56,8 @@ android.skip_byte_compile = False
 
 [buildozer]
 # (int) Log level (0 = error only, 1 = info, 2 = debug)
-log_level = 2
+# Log Truncate වීම වැළැක්වීමට මෙය 1 ලෙස තබා ඇත.
+log_level = 1
 
 # (int) Display warning if buildozer is run as root (0 = False, 1 = True)
 warn_on_root = 0
