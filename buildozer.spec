@@ -33,17 +33,17 @@ fullscreen = 1
 # (list) Permissions
 android.permissions = INTERNET, ACCESS_NETWORK_STATE
 
-# (int) Target Android API (Play Store 2026 Target)
+# (int) Target Android API (API 34 - Google Play 2024/2025/2026 Standards)
 android.api = 34
 android.target_api = 34
 
-# (int) Minimum API your APK/AAB will support.
-android.minapi = 21
+# (int) Minimum API your APK/AAB will support (API 24 ensures broad modern device support)
+android.minapi = 24
 
 # (bool) Use --private data storage (recommended)
 android.private_storage = True
 
-# (list) Architectures to build for (Play Store requires 64-bit arm64-v8a)
+# (list) Architectures to build for (Play Store strictly requires arm64-v8a)
 android.archs = arm64-v8a, armeabi-v7a
 
 # (bool) Skip byte compile for .py files
