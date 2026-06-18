@@ -23,24 +23,29 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-buildozer-
 
-      - name: Create Local Buildozer Cache Directory and Fix Permissions
+      - name: Create Local Buildozer Cache Directory
         run: |
           mkdir -p .buildozer-global
           chmod -R 777 .buildozer-global
-          chmod -R 777 ${{ github.workspace }}
 
-      - name: Build Android App Bundle via User-Spoofed Docker Container
-        # -w /home/user/hostdir මඟින් Buildozer ධාවනය වන ස්ථානය (Working Directory) නිවැරදිව සකසයි.
+      - name: Build Android App Bundle (STABLE ROOT MODE WITH INTERNAL PIPE)
+        # 1. -u 1000:1000 ඉවත් කර ඇත (Root ලෙස දිවෙන බැවින් Errno 13 Permission Denied නොපැමිණේ).
+        # 2. "yes y | buildozer" මඟින් Container එක ඇතුළතදීම Root අනතුරු ඇඟවීමට 'y' පිළිතුර ලබා දේ (EOFError මඟහරියි).
         run: |
           docker run --rm \
             --entrypoint "" \
-            -u 1000:1000 \
             -w /home/user/hostdir \
-            -e HOME=/tmp \
             -v ${{ github.workspace }}:/home/user/hostdir \
-            -v ${{ github.workspace }}/.buildozer-global:/tmp/.buildozer \
+            -v ${{ github.workspace }}/.buildozer-global:/home/user/.buildozer \
             kivy/buildozer:latest \
-            /bin/bash -c "buildozer android release"
+            /bin/bash -c "yes y | buildozer android release"
+
+      - name: Fix Workspace Permissions for GitHub Actions Artifacts
+        # Root විසින් සෑදූ ගොනුවල අයිතිය නැවත GitHub Runner වෙත ලබා ගැනීම
+        if: always()
+        run: |
+          sudo chown -R $USER:$USER ${{ github.workspace }}
+          sudo chown -R $USER:$USER ${{ github.workspace }}/.buildozer-global || true
 
       - name: Upload Production Android Artifact
         uses: actions/upload-artifact@v4
