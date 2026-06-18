@@ -28,13 +28,14 @@ jobs:
           mkdir -p .buildozer-global
           chmod -R 777 .buildozer-global
 
-      - name: Build Android App Bundle (STABLE ROOT MODE WITH INTERNAL PIPE)
+      - name: Build Android App Bundle (STABLE ROOT MODE)
+        # මෙහි Cache එක /root/.buildozer වෙත ලබා දී ඇත. 
         run: |
           docker run --rm \
             --entrypoint "" \
             -w /home/user/hostdir \
             -v ${{ github.workspace }}:/home/user/hostdir \
-            -v ${{ github.workspace }}/.buildozer-global:/home/user/.buildozer \
+            -v ${{ github.workspace }}/.buildozer-global:/root/.buildozer \
             kivy/buildozer:latest \
             /bin/bash -c "yes y | buildozer android release"
 
