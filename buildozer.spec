@@ -11,7 +11,7 @@ package.domain = com.senu.puzzle
 # (string) Source code where the main.py lives
 source.dir = .
 
-# (list) Source files to include (let empty to include all the files)
+# (list) Source files to include
 source.include_exts = py,png,jpg,kv,atlas,json
 
 # (string) Application version
@@ -37,14 +37,16 @@ android.permissions = INTERNET, ACCESS_NETWORK_STATE
 android.api = 34
 android.target_api = 34
 
-# (int) Minimum API your APK/AAB will support (API 24 ensures broad modern device support)
+# (int) Minimum API your APK/AAB will support
 android.minapi = 24
+
+# (str) Android NDK version to use (Force Stable Version to prevent Compiler Crash)
+android.ndk = 25b
 
 # (bool) Use --private data storage (recommended)
 android.private_storage = True
 
-# (list) Architectures to build for 
-# Play Store strictly requires 64-bit arm64-v8a. armeabi-v7a ඉවත් කිරීමෙන් GitHub RAM Crash වීම වළක්වයි.
+# (list) Architectures to build for (Strictly 64-bit for modern Android/Play Store)
 android.archs = arm64-v8a
 
 # (bool) Skip byte compile for .py files
@@ -56,8 +58,7 @@ android.skip_byte_compile = False
 
 [buildozer]
 # (int) Log level (0 = error only, 1 = info, 2 = debug)
-# Log Truncate වීම වැළැක්වීමට මෙය 1 ලෙස තබා ඇත.
-log_level = 1
+log_level = 2
 
 # (int) Display warning if buildozer is run as root (0 = False, 1 = True)
 warn_on_root = 0
