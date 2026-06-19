@@ -15,42 +15,26 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Clean build environment
+      - name: Force Clean Build Environment
         run: |
-          rm -rf .buildozer
+          # අත්‍යවශ්‍යයෙන්ම පවතින පැරණි buildozer දත්ත ඉවත් කිරීම
+          sudo rm -rf .buildozer
+          mkdir -p .buildozer
 
-      - name: Cache Buildozer Global Directory
-        uses: actions/cache@v4
-        with:
-          path: .buildozer
-          key: ${{ runner.os }}-buildozer-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-buildozer-
-
-      - name: Create Local Buildozer Cache Directory
-        run: |
-          mkdir -p .buildozer-global
-          chmod -R 777 .buildozer-global
-
-      - name: Build Android App Bundle (STABLE ROOT MODE)
-        # මෙහි Cache එක /root/.buildozer වෙත ලබා දී ඇත. 
+      - name: Build Android App
         run: |
           docker run --rm \
-            --entrypoint "" \
-            -w /home/user/hostdir \
             -v ${{ github.workspace }}:/home/user/hostdir \
-            -v ${{ github.workspace }}/.buildozer-global:/root/.buildozer \
+            -v ${{ github.workspace }}/.buildozer:/home/user/hostdir/.buildozer \
             kivy/buildozer:latest \
-            /bin/bash -c "yes y | buildozer android release"
+            /bin/bash -c "cd /home/user/hostdir && yes | buildozer android clean && yes | buildozer android release"
 
-      - name: Fix Workspace Permissions for GitHub Actions Artifacts
+      - name: Fix Permissions
         if: always()
-        run: |
-          sudo chown -R $USER:$USER ${{ github.workspace }}
-          sudo chown -R $USER:$USER ${{ github.workspace }}/.buildozer-global || true
+        run: sudo chown -R $USER:$USER ${{ github.workspace }}
 
-      - name: Upload Production Android Artifact
+      - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ultimate-sliding-puzzle-release
+          name: release-aab
           path: bin/*.aab
