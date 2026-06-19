@@ -37,6 +37,9 @@ orientation = portrait
 # (bool) Indicate if the application should be fullscreen or not
 fullscreen = 1
 
+# අතිරේක බිල්ඩ් සැකසුම්
+android.accept_sdk_license = True
+
 # =============================================================================
 # Android specific configuration
 # =============================================================================
