@@ -14,8 +14,14 @@ source.dir = .
 # (list) Source files to include
 source.include_exts = py,png,jpg,kv,atlas,json
 
-# (string) Application version
-version = 1.0.0
+# (str) Icon of the application
+icon.filename = %(source.dir)s/icon.png
+
+# (str) Presplash of the application
+presplash.filename = %(source.dir)s/presplash.jpg
+
+# (str) Application version
+version = 1.0.1  # පියවර 3 අනුව 1.0.0 වෙනුවට 1.0.1 ලෙස වෙනස් කරන්න.
 
 # (list) Application requirements
 # නව Cython 3 සමඟ ඇතිවන ගැටුම් වැළැක්වීමට cython==0.29.33 ලෙස එක් කර ඇත.
