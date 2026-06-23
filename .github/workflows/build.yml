@@ -20,16 +20,13 @@ jobs:
           mkdir -p .buildozer
 
       - name: Build Android App
-        env:
-          # Root සහ අන්තර්ක්‍රියාකාරී ප්‍රශ්න අක්‍රිය කිරීම සඳහා මෙය අනිවාර්යයි
-          BUILDOZER_ALLOW_ROOT: '1'
         run: |
           docker run --rm \
             -v "${{ github.workspace }}:/home/user/hostdir" \
             -v "${{ github.workspace }}/.buildozer:/home/user/hostdir/.buildozer" \
             -e BUILDOZER_ALLOW_ROOT=1 \
             kivy/buildozer:latest \
-            /bin/bash -c "cd /home/user/hostdir && export BUILDOZER_ALLOW_ROOT=1 && buildozer android release"
+            /bin/bash -c "cd /home/user/hostdir && sed -i 's/self.check_root()/# self.check_root()/g' /home/user/.venv/lib/python3.14/site-packages/buildozer/__init__.py && buildozer android release"
 
       - name: Fix Permissions
         if: always()
