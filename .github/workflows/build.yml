@@ -10,7 +10,6 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -21,15 +20,13 @@ jobs:
           mkdir -p .buildozer
 
       - name: Build Android App
-        env:
-          BUILDOZER_ALLOW_ROOT: '1'
         run: |
           docker run --rm \
             -v "${{ github.workspace }}:/home/user/hostdir" \
             -v "${{ github.workspace }}/.buildozer:/home/user/hostdir/.buildozer" \
             -e BUILDOZER_ALLOW_ROOT=1 \
             kivy/buildozer:latest \
-            /bin/bash -c "cd /home/user/hostdir && yes y | buildozer android release"
+            bash -c "cd /home/user/hostdir && buildozer android release"
 
       - name: Fix Permissions
         if: always()
