@@ -18,20 +18,15 @@ jobs:
         run: |
           sudo rm -rf .buildozer
           mkdir -p .buildozer
-          sudo chmod -R 777 .buildozer
 
       - name: Build Android App
         run: |
           docker run --rm \
-            -u $(id -u):$(id -g) \
             -v "${{ github.workspace }}:/home/user/hostdir" \
             -v "${{ github.workspace }}/.buildozer:/home/user/hostdir/.buildozer" \
+            -e BUILDOZER_ALLOW_ROOT=1 \
             kivy/buildozer:latest \
             /bin/bash -c "cd /home/user/hostdir && buildozer android release"
-
-      - name: Fix Permissions
-        if: always()
-        run: sudo chown -R $USER:$USER ${{ github.workspace }}
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
