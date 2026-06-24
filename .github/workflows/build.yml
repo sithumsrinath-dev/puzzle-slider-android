@@ -1,4 +1,4 @@
-name: Build Android App with Buildozer Docker
+name: Build Android App Natively
 
 on:
   push:
@@ -10,18 +10,30 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Build Android App
+      - name: Set up Python 3.11 (Stable for Buildozer)
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install System Dependencies for Android Build
         run: |
-          docker run --rm \
-            -v "${{ github.workspace }}:/home/user/hostdir" \
-            -v "${{ github.workspace }}/.buildozer:/home/user/hostdir/.buildozer" \
-            -e BUILDOZER_ALLOW_ROOT=1 \
-            kivy/buildozer:latest \
-            /bin/bash -c "cd /home/user/hostdir && sed -i 's/self.check_root()/# self.check_root()/g' /home/user/.venv/lib/python3.14/site-packages/buildozer/__init__.py && buildozer android release"
+          sudo apt-get update
+          sudo apt-get install -y build-essential git zip unzip autoconf libtool pkg-config zlib1g-dev libncurses5-dev libncursesw5-dev libtinfo5 cmake libffi-dev libssl-dev openjdk-17-jdk
+
+      - name: Install Buildozer and Python Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install buildozer cython==0.29.33 virtualenv
+
+      - name: Build Android Release (AAB)
+        run: |
+          # මෙහිදී කිසිදු root ප්‍රශ්නයක් අසන්නේ නැත.
+          buildozer android release
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
