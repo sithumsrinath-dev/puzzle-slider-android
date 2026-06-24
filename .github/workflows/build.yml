@@ -1,40 +1,8 @@
-name: Build Android App with Buildozer Docker
-
-on:
-  push:
-    branches: [ main, master ]
-  pull_request:
-    branches: [ main, master ]
-  workflow_dispatch:
-
-jobs:
-  build:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
-      - name: Force Clean Build Environment
-        run: |
-          sudo rm -rf .buildozer
-          mkdir -p .buildozer
-
-      - name: Build Android App
+- name: Build Android App
         run: |
           docker run --rm \
             -v ${{ github.workspace }}:/home/user/hostdir \
             -v ${{ github.workspace }}/.buildozer:/home/user/hostdir/.buildozer \
             -e BUILDOZER_ALLOW_ROOT=1 \
             kivy/buildozer:latest \
-            /bin/bash -c "cd /home/user/hostdir && buildozer --verbose android clean && buildozer --verbose android release"
-
-      - name: Fix Permissions
-        if: always()
-        run: sudo chown -R $USER:$USER ${{ github.workspace }}
-
-      - name: Upload Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: release-aab
-          path: bin/*.aab
+            /bin/bash -c "cd /home/user/hostdir && yes | buildozer --verbose android clean && yes | buildozer --verbose android release"
