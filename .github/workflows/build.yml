@@ -1,4 +1,4 @@
-name: Build Android App Natively
+name: Build Android App with Buildozer Docker
 
 on:
   push:
@@ -9,31 +9,29 @@ on:
 
 jobs:
   build:
-    # මෙතැනින් තමයි ගැටලුව ස්ථිරවම විසඳුවේ (ubuntu-latest වෙනුවට ubuntu-22.04 භාවිතය)
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Set up Python 3.11 (Stable for Buildozer)
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-
-      - name: Install System Dependencies for Android Build
+      - name: Force Clean Build Environment
         run: |
-          sudo apt-get update
-          sudo apt-get install -y build-essential git zip unzip autoconf libtool pkg-config zlib1g-dev libncurses5-dev libncursesw5-dev libtinfo5 cmake libffi-dev libssl-dev openjdk-17-jdk
+          sudo rm -rf .buildozer
+          mkdir -p .buildozer
 
-      - name: Install Buildozer and Python Dependencies
+      - name: Build Android App
         run: |
-          python -m pip install --upgrade pip
-          pip install buildozer cython==0.29.33 virtualenv
+          docker run --rm \
+            -v ${{ github.workspace }}:/home/user/hostdir \
+            -v ${{ github.workspace }}/.buildozer:/home/user/hostdir/.buildozer \
+            -e BUILDOZER_ALLOW_ROOT=1 \
+            kivy/buildozer:latest \
+            /bin/bash -c "cd /home/user/hostdir && buildozer --verbose android clean && buildozer --verbose android release"
 
-      - name: Build Android Release (AAB)
-        run: |
-          buildozer android release
+      - name: Fix Permissions
+        if: always()
+        run: sudo chown -R $USER:$USER ${{ github.workspace }}
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
