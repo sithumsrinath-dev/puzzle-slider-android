@@ -21,7 +21,7 @@ icon.filename = %(source.dir)s/icon.png
 presplash.filename = %(source.dir)s/presplash.jpg
 
 # (str) Application version
-version = 1.0.1  # පියවර 3 අනුව 1.0.0 වෙනුවට 1.0.1 ලෙස වෙනස් කරන්න.
+version = 1.0.1
 
 # (list) Application requirements
 # නව Cython 3 සමඟ ඇතිවන ගැටුම් වැළැක්වීමට cython==0.29.33 ලෙස එක් කර ඇත.
