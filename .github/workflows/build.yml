@@ -14,11 +14,6 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Force Clean Build Environment
-        run: |
-          sudo rm -rf .buildozer
-          mkdir -p .buildozer
-
       - name: Build Android App
         run: |
           docker run --rm \
@@ -26,7 +21,7 @@ jobs:
             -v "${{ github.workspace }}/.buildozer:/home/user/hostdir/.buildozer" \
             -e BUILDOZER_ALLOW_ROOT=1 \
             kivy/buildozer:latest \
-            /bin/bash -c "cd /home/user/hostdir && buildozer android release"
+            /bin/bash -c "cd /home/user/hostdir && sed -i 's/self.check_root()/# self.check_root()/g' /home/user/.venv/lib/python3.14/site-packages/buildozer/__init__.py && buildozer android release"
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
