@@ -9,7 +9,8 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    # මෙතැනින් තමයි ගැටලුව ස්ථිරවම විසඳුවේ (ubuntu-latest වෙනුවට ubuntu-22.04 භාවිතය)
+    runs-on: ubuntu-22.04
 
     steps:
       - name: Checkout Code
@@ -32,7 +33,6 @@ jobs:
 
       - name: Build Android Release (AAB)
         run: |
-          # මෙහිදී කිසිදු root ප්‍රශ්නයක් අසන්නේ නැත.
           buildozer android release
 
       - name: Upload Artifact
