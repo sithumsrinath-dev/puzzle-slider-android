@@ -32,7 +32,7 @@ jobs:
             -e BUILDOZER_WARN_ON_ROOT=0 \
             -e CI=1 \
             kivy/buildozer:latest \
-            -c "cd /home/user/hostdir && yes | buildozer android clean && yes | buildozer android release"
+            -c "cd /home/user/hostdir && yes | buildozer android release"
 
       - name: Fix Permissions
         if: always()
