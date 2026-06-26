@@ -1,3 +1,5 @@
+# .github/workflows/build.yml
+
 name: Build Android App with Buildozer Docker
 
 on:
@@ -25,10 +27,8 @@ jobs:
           docker run --rm \
             -v ${{ github.workspace }}:/home/user/hostdir \
             -v ${{ github.workspace }}/.buildozer:/home/user/hostdir/.buildozer \
-            -e BUILDOZER_ALLOW_ROOT=1 \
-            -e CI=1 \
             kivy/buildozer:latest \
-            /bin/bash -c "cd /home/user/hostdir && yes | buildozer android clean && yes | buildozer android release"
+            /bin/bash -c "export BUILDOZER_ALLOW_ROOT=1 && export BUILDOZER_WARN_ON_ROOT=0 && export CI=1 && cd /home/user/hostdir && buildozer android clean && buildozer android release"
 
       - name: Fix Permissions
         if: always()
