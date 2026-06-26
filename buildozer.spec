@@ -27,7 +27,7 @@ presplash.filename = %(source.dir)s/presplash.jpg
 version = 1.0.1
 
 # (list) Application requirements
-requirements = python3,kivy==2.3.0,cython==0.29.33,openssl,requests,urllib3,certifi
+requirements = python3,kivy,html5lib,openssl,requests,urllib3,certifi
 
 # (str) python-for-android branch to use, defaults to master
 p4a.branch = master
@@ -38,7 +38,7 @@ orientation = portrait
 # (bool) Indicate if the application should be fullscreen or not
 fullscreen = 1
 
-# අතිරේක බිල්ඩ් සැකසුම්
+# Android SDK ලිපිදේය එකඟතාවය
 android.accept_sdk_license = True
 
 # =============================================================================
@@ -48,7 +48,7 @@ android.accept_sdk_license = True
 # (list) Permissions
 android.permissions = INTERNET, ACCESS_NETWORK_STATE
 
-# (int) Target Android API, should be as high as possible.
+# (int) Target Android API, optimized for Android 16 and backward compatibility
 android.api = 35
 android.target_api = 35
 
@@ -61,8 +61,8 @@ android.ndk = 25b
 # (bool) Use --private data storage (recommended)
 android.private_storage = True
 
-# (list) Architectures to build for
-android.archs = arm64-v8a
+# (list) Architectures to build for (Prevents Black Screen on modern devices)
+android.archs = arm64-v8a, armeabi-v7a
 
 # (str) The format used to package the app
 android.release_artifact = aab
