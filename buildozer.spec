@@ -22,6 +22,9 @@ android.archs = arm64-v8a, armeabi-v7a
 android.release_artifact = aab
 android.skip_byte_compile = False
 android.meta_data = android.app.lib_name=main
+android.presplash_color = #000000
+
 [buildozer]
 log_level = 2
 warn_on_root = 0
+build_dir = .buildozer
