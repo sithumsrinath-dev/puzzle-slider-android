@@ -10,7 +10,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
+      - name: Cache Buildozer
+        uses: actions/cache@v4
+        with:
+          path: |
+            .buildozer
+            /home/runner/.buildozer
+          key: buildozer-${{ runner.os }}-${{ hashFiles('buildozer.spec') }}
+
       - name: Build with Buildozer
         run: |
           sudo apt update
@@ -18,9 +26,10 @@ jobs:
           pip3 install --user --upgrade buildozer
           pip3 install --user --upgrade cython
           export PATH=$PATH:$HOME/.local/bin
-          # Remove clean command to prevent FileNotFoundError on non-existent build directories
+          # Ensure platform directory is initialized
+          buildozer android debug
           buildozer android release
-          
+
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
