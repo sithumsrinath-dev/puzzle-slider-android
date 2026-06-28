@@ -18,6 +18,8 @@ jobs:
           pip3 install --user --upgrade buildozer
           pip3 install --user --upgrade cython
           export PATH=$PATH:$HOME/.local/bin
+          # Force NDK r25b explicitly to match spec
+          buildozer android clean
           buildozer android release
           
       - name: Upload Artifact
