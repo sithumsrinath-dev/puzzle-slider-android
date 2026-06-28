@@ -24,6 +24,8 @@ android.skip_byte_compile = False
 android.meta_data = android.app.lib_name=main
 android.presplash_color = #000000
 android.entrypoint = org.kivy.android.PythonActivity
+# Ensure OpenGL ES 2.0 context for stability
+android.opengl_backend = gl
 
 [buildozer]
 log_level = 2
