@@ -8,7 +8,7 @@ icon.filename = %(source.dir)s/icon.png
 presplash.filename = %(source.dir)s/presplash.jpg
 version = 1.0.1
 requirements = python3,kivy==2.3.0,openssl,requests,urllib3,certifi,idna,charset-normalizer
-p4a.branch = develop
+p4a.branch = master
 orientation = portrait
 fullscreen = 1
 android.accept_sdk_license = True
