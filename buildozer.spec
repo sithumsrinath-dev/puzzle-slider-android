@@ -15,6 +15,7 @@ android.permissions = INTERNET, ACCESS_NETWORK_STATE
 android.api = 35
 android.minapi = 24
 android.ndk = 25b
+android.ndk_path = /usr/local/lib/android/sdk/ndk/25.2.9519653
 android.archs = arm64-v8a, armeabi-v7a
 android.release_artifact = aab
 android.skip_byte_compile = False
