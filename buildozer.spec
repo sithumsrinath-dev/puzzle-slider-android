@@ -27,6 +27,6 @@ android.entrypoint = org.kivy.android.PythonActivity
 android.opengl_backend = gl
 
 [buildozer]
-log_level = 2
+log_level = 1
 warn_on_root = 0
 build_dir = .buildozer
