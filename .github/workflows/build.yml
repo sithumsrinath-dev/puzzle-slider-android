@@ -46,6 +46,7 @@ jobs:
 
       - name: Build Android Release
         run: |
+          export ANDROID_NDK_HOME=/usr/local/lib/android/sdk/ndk/25.2.9519653
           yes | buildozer -v android release
 
       - name: Upload Artifact
