@@ -7,8 +7,8 @@ source.include_exts = py,png,jpg,kv,atlas,json
 icon.filename = %(source.dir)s/icon.png
 presplash.filename = %(source.dir)s/presplash.jpg
 version = 1.0.1
-requirements = python3,kivy,openssl,requests,urllib3,certifi,idna,charset-normalizer
-p4a.branch = master
+requirements = python3,kivy==2.3.0,openssl,requests,urllib3,certifi,idna,charset-normalizer
+p4a.branch = develop
 orientation = portrait
 fullscreen = 1
 android.accept_sdk_license = True
