@@ -51,16 +51,18 @@ jobs:
 
       - name: Build Android Release
         run: |
-          # Clear potentially conflicting env vars
-          unset ANDROID_NDK_HOME
-          unset ANDROID_NDK_ROOT
+          # Define NDK path strictly
+          export NDK_PATH=/usr/local/lib/android/sdk/ndk/27.3.13750724
+          export ANDROID_NDK_HOME=$NDK_PATH
+          export ANDROID_NDK_ROOT=$NDK_PATH
           
-          # Force buildozer to use local paths
-          export ANDROID_HOME=/usr/local/lib/android/sdk
-          export ANDROID_NDK_HOME=/usr/local/lib/android/sdk/ndk/27.3.13750724
-          
+          # Clean build environment
           rm -rf .buildozer/
+          
+          # Run build
           buildozer android release
+        env:
+          ANDROID_HOME: /usr/local/lib/android/sdk
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
