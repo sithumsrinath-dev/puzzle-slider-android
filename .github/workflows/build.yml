@@ -41,16 +41,11 @@ jobs:
 
       - name: Install Python Dependencies
         run: |
-          pip install --upgrade pip
+          python -m pip install --upgrade pip
           pip install "cython<3.0.0" buildozer virtualenv
 
       - name: Build Android Release
-        env:
-          ANDROID_NDK_HOME: /usr/local/lib/android/sdk/ndk/25.2.9519653
-          ANDROID_NDK_ROOT: /usr/local/lib/android/sdk/ndk/25.2.9519653
-          ANDROIDNDK: /usr/local/lib/android/sdk/ndk/25.2.9519653
         run: |
-          export PATH=/usr/local/lib/android/sdk/ndk/25.2.9519653/toolchains/llvm/prebuilt/linux-x64/bin:$PATH
           rm -rf .buildozer/
           yes | buildozer -v android release
 
