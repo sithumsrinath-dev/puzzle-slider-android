@@ -38,22 +38,22 @@ jobs:
             make \
             gettext
 
-      - name: Set up Python
+      - name: Set up Python 3.11
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
-      - name: Install Buildozer
+      - name: Install Buildozer and Dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install "cython<3.0.0" wheel virtualenv
+          pip install --upgrade setuptools
+          pip install "cython<3.0.0" wheel
           pip install buildozer==1.5.0
 
       - name: Build Android Release
         run: |
           export ANDROID_NDK_HOME=/home/runner/.buildozer/android/platform/android-ndk-r25b
           export ANDROID_SDK_HOME=/usr/local/lib/android/sdk
-          # Python-for-android ව්‍යාකූලතාව වළක්වා ගැනීමට පවතින build ඉවත් කිරීම
           rm -rf .buildozer/android/platform/build-*
           buildozer android release
 
