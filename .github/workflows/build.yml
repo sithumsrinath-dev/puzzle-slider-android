@@ -1,13 +1,8 @@
-දෝෂයට හේතුව වනුයේ `buildozer.spec` ගොනුවේ `android.ndk_path` අගය වෙනස් කළද, Buildozer මඟින් ස්වයංක්‍රීයව සකසන අභ්‍යන්තර `.buildozer/` cache ගොනු තුළ පැරණි දූෂිත වින්‍යාසයන් (artifacts) ඉතිරිව පැවතීමයි, එබැවින් ධාවනයට පෙර cache එක පූර්ණ ලෙස පිරිසිදු කර (`buildozer android clean`) නවතම Cython අනුවාදය සහ නිවැරදි SDK බලපත්‍ර ස්ථාපනය ස්ථාපිත කිරීමට `build.yml` ගොනුව පමණක් යාවත්කාලීන කර ඇත.
-
-### .github/workflows/build.yml
-
-```yaml
 name: Build Android App
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [ "main", "master" ]
   workflow_dispatch:
 
 jobs:
@@ -64,5 +59,3 @@ jobs:
         with:
           name: release-aab
           path: bin/*.aab
-
-```
