@@ -1,28 +1,33 @@
 [app]
-title = Ultimate Sliding Puzzle
+title = Sliding Puzzle
 package.name = slidingpuzzle
-package.domain = com.senu.puzzle
+package.domain = org.senu.games
+
 source.dir = .
-source.include_exts = py,png,jpg,kv,atlas,json
-icon.filename = %(source.dir)s/icon.png
-presplash.filename = %(source.dir)s/presplash.jpg
-version = 1.0.1
+source.include_exts = py,png,jpg,kv,atlas,ttf,wav,ogg
+
+version = 1.0.0
+
 requirements = python3,kivy==2.3.0
+
+icon.filename = icon.png
+presplash.filename = presplash.jpg
+
 orientation = portrait
-fullscreen = 1
-android.accept_sdk_license = True
-android.permissions = INTERNET, ACCESS_NETWORK_STATE
+fullscreen = 0
+
+android.permissions = INTERNET, WAKE_LOCK
+
 android.api = 35
 android.minapi = 24
 android.ndk = 25b
-android.ndk_path = /usr/local/lib/android/sdk/ndk/25.2.9519653
+android.ndk_api = 24
+android.accept_sdk_license = True
 android.archs = arm64-v8a, armeabi-v7a
-android.release_artifact = aab
-android.skip_byte_compile = False
-android.presplash_color = #000000
+android.allow_backup = True
+
+p4a.bootstrap = sdl2
 
 [buildozer]
 log_level = 2
-warn_on_root = 0
-build_dir = .buildozer
-bin_dir = ./bin
+warn_on_root = 1
