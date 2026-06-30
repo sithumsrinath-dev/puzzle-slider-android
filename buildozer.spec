@@ -27,6 +27,7 @@ android.archs = arm64-v8a, armeabi-v7a
 android.allow_backup = True
 
 p4a.bootstrap = sdl2
+p4a.local_recipes = 
 
 [buildozer]
 log_level = 2
