@@ -46,7 +46,7 @@ jobs:
       - name: Install Python Dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install wheel virtualenv
+          pip install "cython<3.0.0" wheel virtualenv
           pip install git+https://github.com/kivy/buildozer.git
 
       - name: Build Android Release
