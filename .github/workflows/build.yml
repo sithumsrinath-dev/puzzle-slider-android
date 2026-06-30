@@ -51,7 +51,14 @@ jobs:
 
       - name: Build Android Release
         run: |
-          export ANDROID_NDK_HOME=/home/runner/.buildozer/android/platform/android-ndk-r25b
+          # Clear potentially conflicting env vars
+          unset ANDROID_NDK_HOME
+          unset ANDROID_NDK_ROOT
+          
+          # Force buildozer to use local paths
+          export ANDROID_HOME=/usr/local/lib/android/sdk
+          export ANDROID_NDK_HOME=/usr/local/lib/android/sdk/ndk/27.3.13750724
+          
           rm -rf .buildozer/
           buildozer android release
 
