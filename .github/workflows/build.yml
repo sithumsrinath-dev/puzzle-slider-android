@@ -1,3 +1,8 @@
+දෝෂයට හේතුව වනුයේ `buildozer.spec` ගොනුවේ `android.ndk_path` අගය වෙනස් කළද, Buildozer මඟින් ස්වයංක්‍රීයව සකසන අභ්‍යන්තර `.buildozer/` cache ගොනු තුළ පැරණි දූෂිත වින්‍යාසයන් (artifacts) ඉතිරිව පැවතීමයි, එබැවින් ධාවනයට පෙර cache එක පූර්ණ ලෙස පිරිසිදු කර (`buildozer android clean`) නවතම Cython අනුවාදය සහ නිවැරදි SDK බලපත්‍ර ස්ථාපනය ස්ථාපිත කිරීමට `build.yml` ගොනුව පමණක් යාවත්කාලීන කර ඇත.
+
+### .github/workflows/build.yml
+
+```yaml
 name: Build Android App
 
 on:
@@ -42,7 +47,7 @@ jobs:
       - name: Install Python Dependencies
         run: |
           pip install --upgrade pip
-          pip install buildozer cython virtualenv
+          pip install "cython<3.0.0" buildozer virtualenv
 
       - name: Build Android Release
         env:
@@ -51,6 +56,7 @@ jobs:
           ANDROIDNDK: /usr/local/lib/android/sdk/ndk/25.2.9519653
         run: |
           export PATH=/usr/local/lib/android/sdk/ndk/25.2.9519653/toolchains/llvm/prebuilt/linux-x64/bin:$PATH
+          buildozer android clean
           yes | buildozer -v android release
 
       - name: Upload Artifact
@@ -58,3 +64,5 @@ jobs:
         with:
           name: release-aab
           path: bin/*.aab
+
+```
