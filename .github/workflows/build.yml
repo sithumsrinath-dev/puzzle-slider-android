@@ -51,9 +51,16 @@ jobs:
           pip install buildozer==1.5.0
 
       - name: Build Android Release
+        env:
+          PYTHON_FOR_ANDROID_BRANCH: master
         run: |
-          export ANDROID_NDK_HOME=/home/runner/.buildozer/android/platform/android-ndk-r25b
+          export ANDROID_HOME=/usr/local/lib/android/sdk
+          export ANDROID_NDK_HOME=/usr/local/lib/android/sdk/ndk/25.2.9519653
           export ANDROID_SDK_HOME=/usr/local/lib/android/sdk
+          
+          # Force set the python version to match target
+          sed -i 's/python3==3.11.9/python3==3.11/g' buildozer.spec
+          
           rm -rf .buildozer/android/platform/build-*
           buildozer android release
 
