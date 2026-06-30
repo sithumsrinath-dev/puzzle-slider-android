@@ -32,7 +32,9 @@ jobs:
             libssl-dev \
             ccache \
             automake \
-            make
+            make \
+            gettext \
+            libtool-bin
 
       - name: Set up Python
         uses: actions/setup-python@v5
