@@ -47,7 +47,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install "cython<3.0.0" wheel virtualenv
-          pip install git+https://github.com/kivy/buildozer.git
+          pip install buildozer==1.5.0
 
       - name: Build Android Release
         run: |
