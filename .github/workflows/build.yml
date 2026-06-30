@@ -51,7 +51,7 @@ jobs:
           ANDROIDNDK: /usr/local/lib/android/sdk/ndk/25.2.9519653
         run: |
           export PATH=/usr/local/lib/android/sdk/ndk/25.2.9519653/toolchains/llvm/prebuilt/linux-x64/bin:$PATH
-          buildozer android clean
+          rm -rf .buildozer/
           yes | buildozer -v android release
 
       - name: Upload Artifact
