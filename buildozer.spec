@@ -8,7 +8,7 @@ source.include_exts = py,png,jpg,kv,atlas,ttf,wav,ogg
 
 version = 1.0.0
 
-requirements = python3==3.11.9,hostpython3==3.11.9,kivy==2.3.0
+requirements = python3==3.11.9,kivy==2.3.0
 
 icon.filename = icon.png
 presplash.filename = presplash.jpg
@@ -18,7 +18,7 @@ fullscreen = 0
 
 android.permissions = INTERNET, WAKE_LOCK
 
-android.api = 35
+android.api = 34
 android.minapi = 24
 android.ndk = 25b
 android.ndk_api = 24
