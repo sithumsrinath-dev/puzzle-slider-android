@@ -53,7 +53,8 @@ jobs:
         run: |
           export ANDROID_NDK_HOME=/home/runner/.buildozer/android/platform/android-ndk-r25b
           export ANDROID_SDK_HOME=/usr/local/lib/android/sdk
-          rm -rf .buildozer/
+          # Python-for-android ව්‍යාකූලතාව වළක්වා ගැනීමට පවතින build ඉවත් කිරීම
+          rm -rf .buildozer/android/platform/build-*
           buildozer android release
 
       - name: Upload Artifact
