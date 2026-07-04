@@ -8,22 +8,17 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    container:
-      image: ghcr.io/kivy/buildozer:master
-      options: --user root
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Declare Safe Git Directory
+      - name: Run Buildozer inside Docker Container
         run: |
-          git config --global --add safe.directory /__w/puzzle-slider-android/puzzle-slider-android
-          chown -R user:user .
-
-      - name: Build with Buildozer Container Environment
-        run: |
-          su user -c "buildozer android release"
+          docker run --rm \
+            -v ${{ github.workspace }}:/home/user/hostdir \
+            ghcr.io/kivy/buildozer:master \
+            android release
 
       - name: Upload Artifact
         if: success()
