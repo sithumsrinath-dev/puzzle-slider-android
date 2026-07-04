@@ -13,17 +13,16 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Fix Directory Permissions for Buildozer User
+      - name: Fix Directory Permissions for Host
         run: |
           sudo chown -R 1000:1000 ${{ github.workspace }}
 
-      - name: Run Buildozer inside Isolated Container
+      - name: Run Buildozer inside Stable Container Environment
         run: |
           docker run --rm \
-            --user 1000:1000 \
             -v ${{ github.workspace }}:/home/user/hostdir \
             ghcr.io/kivy/buildozer:latest \
-            android release
+            buildozer android release
 
       - name: Reset Permissions for Artifact Upload
         if: always()
