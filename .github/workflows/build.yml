@@ -13,11 +13,12 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Run Buildozer inside Docker Container
+      - name: Run Buildozer inside Fixed Docker Container
         run: |
+          chown -R 1000:1000 ${{ github.workspace }}
           docker run --rm \
             -v ${{ github.workspace }}:/home/user/hostdir \
-            ghcr.io/kivy/buildozer:master \
+            ghcr.io/kivy/buildozer:latest \
             android release
 
       - name: Upload Artifact
@@ -31,4 +32,4 @@ jobs:
         if: failure()
         uses: mxschmitt/action-tmate@v3
         with:
-          limit-access-to-actor: true
+          limit-access-to-actor: false
