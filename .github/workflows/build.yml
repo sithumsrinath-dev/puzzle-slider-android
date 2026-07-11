@@ -21,6 +21,7 @@ jobs:
         run: |
           docker run --rm \
             -v ${{ github.workspace }}:/home/user/hostdir \
+            --user user \
             ghcr.io/kivy/buildozer:latest \
             buildozer android release
 
