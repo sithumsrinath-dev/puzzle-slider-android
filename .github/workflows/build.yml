@@ -18,7 +18,7 @@ jobs:
           docker run --rm \
             -v ${{ github.workspace }}:/home/user/hostdir \
             ghcr.io/kivy/buildozer:latest \
-            /bin/bash -c "export BUILDOZER_WARN_ON_ROOT=0 && buildozer android release"
+            /bin/bash -c "yes y | buildozer android release"
 
       - name: Fix Workspace Permissions for Artifact Upload
         if: always()
