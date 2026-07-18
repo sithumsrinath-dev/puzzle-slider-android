@@ -1,8 +1,10 @@
-name: Build Android App
+name: Build Puzzle Slider APK
 
 on:
   push:
-    branches: [ "main", "master" ]
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
   workflow_dispatch:
 
 jobs:
@@ -10,49 +12,83 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+    - name: Checkout Source Code
+      uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-x64: true
-          python-version: '3.11'
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11.15'
 
-      - name: Install System Dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends \
-            build-essential \
-            ccache \
-            git \
-            libffi-dev \
-            libssl-dev \
-            libltdl-dev \
-            openjdk-17-jdk \
-            patch \
-            unzip \
-            zlib1g-dev \
-            zip \
-            autoconf \
-            automake \
-            libtool \
-            pkg-config \
-            cmake \
-            ninja-build
+    - name: Install System Dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y --no-install-recommends \
+          build-essential \
+          git \
+          ffmpeg \
+          libsdl2-dev \
+          libsdl2-image-dev \
+          libsdl2-mixer-dev \
+          libsdl2-ttf-dev \
+          libportmidi-dev \
+          libswscale-dev \
+          libavformat-dev \
+          libavcodec-dev \
+          zlib1g-dev \
+          libgstreamer1.0-dev \
+          gstreamer1.0-plugins-base \
+          gstreamer1.0-plugins-good \
+          gstreamer1.0-plugins-bad \
+          gstreamer1.0-plugins-ugly \
+          gstreamer1.0-libav \
+          libmtdev-dev \
+          xclip \
+          xsel \
+          libjpeg-dev \
+          openjdk-17-jdk \
+          unzip \
+          zip \
+          libffi-dev \
+          libssl-dev \
+          autoconf \
+          automake \
+          libtool \
+          pkg-config \
+          cmake
 
-      - name: Install Python Dependencies
-        run: |
-          pip install --upgrade pip setuptools virtualenv Cython==3.0.11
-          pip install git+https://github.com/kivy/buildozer.git@master
+    - name: Install Python Dependencies
+      run: |
+        python -m pip install --upgrade pip setuptools wheel
+        pip install cython==0.29.36 virtualenv aidl
 
-      - name: Build with Buildozer
-        run: |
-          buildozer android release
+    - name: Install Buildozer
+      run: |
+        pip install git+https://github.com/kivy/buildozer.git@master
 
-      - name: Upload Artifact
-        if: success()
-        uses: actions/upload-artifact@v4
-        with:
-          name: puzzle-slider-release
-          path: bin/*.aab
+    - name: Pre-accept Android SDK Licenses
+      run: |
+        mkdir -p ~/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin
+        # Buildozer install steps setup Android SDK path dynamically, so we force accept through standard system path if available, 
+        # and configure buildozer's internal environment to auto-accept licenses.
+        mkdir -p ~/.android
+        touch ~/.android/repositories.cfg
+        
+    - name: Build Android Release APK with Buildozer
+      run: |
+        # Set environment variable to strictly auto-accept licenses during sdkmanager runtime inside buildozer
+        export BUILDOZER_ALLOW_ORG_BUILD=1
+        yes | buildozer android release
+      env:
+        pythonLocation: /opt/hostedtoolcache/Python/3.11.15/x64
+        PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.11.15/x64/lib/pkgconfig
+        Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.15/x64
+        Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.15/x64
+        Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.15/x64
+        LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.11.15/x64/lib
+
+    - name: Upload Build Artifacts
+      uses: actions/artifacts-upload@v4
+      with:
+        name: release-apk
+        path: bin/*.apk
