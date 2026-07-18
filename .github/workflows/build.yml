@@ -13,17 +13,42 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Run Buildozer inside Isolated Container
-        run: |
-          docker run --rm \
-            -v ${{ github.workspace }}:/home/user/hostdir \
-            ghcr.io/kivy/buildozer:latest \
-            /bin/bash -c "export BUILDOZER_WARN_ON_ROOT=0 && buildozer android release"
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-x64: true
+          python-version: '3.11'
 
-      - name: Fix Workspace Permissions for Artifact Upload
-        if: always()
+      - name: Install System Dependencies
         run: |
-          sudo chown -R runner:docker ${{ github.workspace }}
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential \
+            ccache \
+            git \
+            libffi-dev \
+            libssl-dev \
+            libltdl-dev \
+            openjdk-17-jdk \
+            patch \
+            unzip \
+            zlib1g-dev \
+            zip \
+            autoconf \
+            automake \
+            libtool \
+            pkg-config \
+            cmake \
+            ninja-build
+
+      - name: Install Python Dependencies
+        run: |
+          pip install --upgrade pip setuptools virtualenv Cython==3.0.11
+          pip install git+https://github.com/kivy/buildozer.git@master
+
+      - name: Build with Buildozer
+        run: |
+          buildozer android release
 
       - name: Upload Artifact
         if: success()
@@ -31,9 +56,3 @@ jobs:
         with:
           name: puzzle-slider-release
           path: bin/*.aab
-
-      - name: Setup Interactive Live Debug Session on Failure
-        if: failure()
-        uses: mxschmitt/action-tmate@v3
-        with:
-          limit-access-to-actor: false
