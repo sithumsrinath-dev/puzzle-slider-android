@@ -27,6 +27,7 @@ jobs:
         options: |
           -v ${{ github.workspace }}:/home/user/hostcvs
           -v /home/runner/.buildozer:/home/user/.buildozer
+          --network host
         run: |
           cd /home/user/hostcvs
           
