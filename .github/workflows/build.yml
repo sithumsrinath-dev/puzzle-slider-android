@@ -1,4 +1,4 @@
-name: Build Puzzle Slider APK
+name: Build Puzzle Slider AAB
 
 on:
   push:
@@ -66,16 +66,20 @@ jobs:
       run: |
         pip install git+https://github.com/kivy/buildozer.git@master
 
-    - name: Pre-accept Android SDK Licenses
+    - name: Setup Android SDK and Tools Framework
       run: |
-        mkdir -p ~/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin
+        mkdir -p ~/.buildozer/android/platform/android-sdk/cmdline-tools/latest
+        wget -q https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O cmdline-tools.zip
+        unzip -q cmdline-tools.zip
+        mv cmdline-tools/* ~/.buildozer/android/platform/android-sdk/cmdline-tools/latest/
         mkdir -p ~/.android
         touch ~/.android/repositories.cfg
+        yes | ~/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin/sdkmanager --licenses
         
-    - name: Build Android Release APK with Buildozer
+    - name: Build Android Release AAB with Buildozer
       run: |
         export BUILDOZER_ALLOW_ORG_BUILD=1
-        yes | buildozer android release
+        buildozer android release
       env:
         pythonLocation: /opt/hostedtoolcache/Python/3.11.15/x64
         PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.11.15/x64/lib/pkgconfig
@@ -87,5 +91,5 @@ jobs:
     - name: Upload Build Artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: release-apk
-        path: bin/*.apk
+        name: release-aab
+        path: bin/*.aab
