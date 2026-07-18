@@ -31,21 +31,37 @@ jobs:
         run: |
           cd /home/user/hostcvs
           
-          # Force create directory trees for Android SDK and cmdline-tools
-          mkdir -p /home/user/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin
-          mkdir -p /root/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin
+          # Setup paths for SDK Command Line Tools
+          mkdir -p /home/user/.buildozer/android/platform/android-sdk/cmdline-tools
+          mkdir -p /root/.buildozer/android/platform/android-sdk/cmdline-tools
+          
+          # Download official Android Command Line Tools inside container
+          wget -q https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O /tmp/cmdline-tools.zip
+          
+          # Extract and place inside user directory under proper structural hierarchy
+          mkdir -p /tmp/cmdline-extracted
+          unzip -q /tmp/cmdline-tools.zip -d /tmp/cmdline-extracted
+          
+          # Copy to user environment
+          cp -r /tmp/cmdline-extracted/cmdline-tools /home/user/.buildozer/android/platform/android-sdk/cmdline-tools/latest
+          # Copy to root environment to prevent root execution fallback failure
+          cp -r /tmp/cmdline-extracted/cmdline-tools /root/.buildozer/android/platform/android-sdk/cmdline-tools/latest
+          
+          # Create license directories
           mkdir -p /home/user/.buildozer/android/platform/android-sdk/licenses
           mkdir -p /root/.buildozer/android/platform/android-sdk/licenses
           
-          # Inject pre-accepted licenses to bypass blocking prompts entirely
-          LICENSE_HASHES="893547e6b492b10e2ea34726a995d8e63b61434d\nd56f5187479451eabf01fb7431302458d34d7756\n24333f8a63b6825ea9c5514f83c2829b004d1fee\n24333f8a63b6825ea9c5514f83c2829b004d1fee"
+          # Pre-accept all Android SDK licenses using safe multi-line string injections
+          LICENSE_HASHES="893547e6b492b10e2ea34726a995d8e63b61434d\nd56f5187479451eabf01fb7431302458d34d7756\n24333f8a63b6825ea9c5514f83c2829b004d1fee\n84831b9409646a918e30573bab4c9c91346d8abd"
           echo -e "$LICENSE_HASHES" > /home/user/.buildozer/android/platform/android-sdk/licenses/android-sdk-license
           echo -e "$LICENSE_HASHES" > /root/.buildozer/android/platform/android-sdk/licenses/android-sdk-license
           
-          # Bootstrap sdkmanager manually to bypass the non-existent legacy tools folder crash
-          export BUILDOZER_ALLOW_ORG_BUILD=1
+          # Explicitly accept via executable binaries just to lock in environment stability
+          yes | /home/user/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=/home/user/.buildozer/android/platform/android-sdk --licenses || true
+          yes | /root/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=/root/.buildozer/android/platform/android-sdk --licenses || true
           
-          # Run buildozer android release command inside container environment
+          # Execute final Android App Bundle generation
+          export BUILDOZER_ALLOW_ORG_BUILD=1
           buildozer android release
 
     - name: Restore Runner Workspace Ownership
