@@ -1,80 +1,24 @@
-name: Build Puzzle Slider AAB
+name: Live Debugging Workflow
 
 on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
   workflow_dispatch:
 
 jobs:
-  build:
+  live_debug:
     runs-on: ubuntu-latest
 
     steps:
     - name: Checkout Source Code
-      uses: actions/checkout@v4[cite: 1]
+      uses: actions/checkout@v4
 
-    - name: Fix Workspace Permissions for Docker Context
+    - name: Run Buildozer Directly to Catch the Real Error
       run: |
         sudo chown -R 1000:1000 ${{ github.workspace }}
-        sudo chmod -R 777 ${{ github.workspace }}[cite: 1]
-
-    - name: Build Android Release AAB inside Stable Kivy Container
-      uses: addnab/docker-run-action@v3[cite: 1]
-      with:
-        image: kivy/buildozer:latest[cite: 1]
-        options: |
-          -v ${{ github.workspace }}:/home/user/hostcvs
-          -v /home/runner/.buildozer:/home/user/.buildozer
-          --network host[cite: 1]
-        run: |
-          cd /home/user/hostcvs[cite: 1]
-          
-          # 1. Create directory structure for legacy tools and latest cmdline-tools
-          mkdir -p /root/.buildozer/android/platform/android-sdk/cmdline-tools/latest
-          mkdir -p /root/.buildozer/android/platform/android-sdk/tools/bin
-          mkdir -p /root/.buildozer/android/platform/android-sdk/licenses
-          
-          mkdir -p /home/user/.buildozer/android/platform/android-sdk/cmdline-tools/latest
-          mkdir -p /home/user/.buildozer/android/platform/android-sdk/tools/bin
-          mkdir -p /home/user/.buildozer/android/platform/android-sdk/licenses[cite: 1]
-          
-          # 2. Download specific Android Command Line Tools package
-          wget -q https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O /tmp/cmdline-tools.zip[cite: 1]
-          
-          # 3. Extract to temporary staging location
-          mkdir -p /tmp/cmdline-raw[cite: 1]
-          unzip -q /tmp/cmdline-tools.zip -d /tmp/cmdline-raw[cite: 1]
-          
-          # 4. Copy to the modern 'latest' structure for both contexts
-          cp -r /tmp/cmdline-raw/cmdline-tools/* /root/.buildozer/android/platform/android-sdk/cmdline-tools/latest/[cite: 1]
-          cp -r /tmp/cmdline-raw/cmdline-tools/* /home/user/.buildozer/android/platform/android-sdk/cmdline-tools/latest/[cite: 1]
-          
-          # 5. ABSOLUTE FIX: Create hard symlinks to trick Buildozer's legacy "tools/bin/sdkmanager" lookup logic
-          ln -sf /root/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin/sdkmanager /root/.buildozer/android/platform/android-sdk/tools/bin/sdkmanager
-          ln -sf /home/user/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin/sdkmanager /home/user/.buildozer/android/platform/android-sdk/tools/bin/sdkmanager
-          
-          # 6. Inject Android SDK hashes directly into proper locations
-          LICENSE_HASHES="893547e6b492b10e2ea34726a995d8e63b61434d\nd56f5187479451eabf01fb7431302458d34d7756\n24333f8a63b6825ea9c5514f83c2829b004d1fee\n84831b9409646a918e30573bab4c9c91346d8abd"[cite: 1]
-          echo -e "$LICENSE_HASHES" > /root/.buildozer/android/platform/android-sdk/licenses/android-sdk-license[cite: 1]
-          echo -e "$LICENSE_HASHES" > /home/user/.buildozer/android/platform/android-sdk/licenses/android-sdk-license[cite: 1]
-          
-          # 7. Force accept and initialize via sdkmanager executable lines directly
-          yes | /root/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=/root/.buildozer/android/platform/android-sdk --licenses || true[cite: 1]
-          yes | /home/user/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=/home/user/.buildozer/android/platform/android-sdk --licenses || true[cite: 1]
-          
-          # 8. Start compilation safely bypassing org validation
-          export BUILDOZER_ALLOW_ORG_BUILD=1[cite: 1]
-          buildozer android release[cite: 1]
-
-    - name: Restore Runner Workspace Ownership
-      if: always()
-      run: |
-        sudo chown -R runner:docker ${{ github.workspace }}[cite: 1]
-
-    - name: Upload Build Artifacts
-      uses: actions/upload-artifact@v4[cite: 1]
-      with:
-        name: release-aab[cite: 1]
-        path: bin/*.aab[cite: 1]
+        sudo chmod -R 777 ${{ github.workspace }}
+        
+        echo "=== STARTING DOCKER BUILDOZER ==="
+        docker run --rm \
+          -v ${{ github.workspace }}:/home/user/hostcvs \
+          -e BUILDOZER_ALLOW_ORG_BUILD=1 \
+          kivy/buildozer:latest \
+          bash -c "cd /home/user/hostcvs && buildozer android release"
