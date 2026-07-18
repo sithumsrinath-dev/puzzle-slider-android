@@ -29,6 +29,14 @@ jobs:
           -v /home/runner/.buildozer:/home/user/.buildozer
         run: |
           cd /home/user/hostcvs
+          
+          # Auto-accept all Android SDK licenses before building
+          if [ -d "/home/user/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin" ]; then
+            yes | /home/user/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin/sdkmanager --licenses || true
+          elif [ -d "/root/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin" ]; then
+            yes | /root/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin/sdkmanager --licenses || true
+          fi
+          
           export BUILDOZER_ALLOW_ORG_BUILD=1
           buildozer android release
 
