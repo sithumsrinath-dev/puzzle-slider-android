@@ -21,24 +21,24 @@ jobs:
         sudo chmod -R 777 ${{ github.workspace }}
         
         docker run --rm \
+          -u 1000:1000 \
           -v ${{ github.workspace }}:/home/user/hostcvs \
           -v /home/runner/.buildozer:/home/user/.buildozer \
           -e BUILDOZER_ALLOW_ORG_BUILD=1 \
           kivy/buildozer:latest \
           bash -c "
-            mkdir -p /root/.buildozer/android/platform/android-sdk/cmdline-tools/latest && \
-            mkdir -p /root/.buildozer/android/platform/android-sdk/tools/bin && \
-            mkdir -p /root/.buildozer/android/platform/android-sdk/licenses && \
+            mkdir -p /home/user/.buildozer/android/platform/android-sdk/cmdline-tools/latest && \
+            mkdir -p /home/user/.buildozer/android/platform/android-sdk/tools/bin && \
+            mkdir -p /home/user/.buildozer/android/platform/android-sdk/licenses && \
             wget -q https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O /tmp/cmdline-tools.zip && \
             mkdir -p /tmp/cmdline-raw && \
             unzip -q /tmp/cmdline-tools.zip -d /tmp/cmdline-raw && \
-            cp -r /tmp/cmdline-raw/cmdline-tools/* /root/.buildozer/android/platform/android-sdk/cmdline-tools/latest/ && \
-            ln -sf /root/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin/sdkmanager /root/.buildozer/android/platform/android-sdk/tools/bin/sdkmanager && \
+            cp -r /tmp/cmdline-raw/cmdline-tools/* /home/user/.buildozer/android/platform/android-sdk/cmdline-tools/latest/ && \
+            ln -sf /home/user/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin/sdkmanager /home/user/.buildozer/android/platform/android-sdk/tools/bin/sdkmanager && \
             LICENSE_HASHES='893547e6b492b10e2ea34726a995d8e63b61434d\nd56f5187479451eabf01fb7431302458d34d7756\n24333f8a63b6825ea9c5514f83c2829b004d1fee\n84831b9409646a918e30573bab4c9c91346d8abd' && \
-            echo -e '\$LICENSE_HASHES' > /root/.buildozer/android/platform/android-sdk/licenses/android-sdk-license && \
-            yes | /root/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=/root/.buildozer/android/platform/android-sdk --licenses || true && \
+            echo -e '\$LICENSE_HASHES' > /home/user/.buildozer/android/platform/android-sdk/licenses/android-sdk-license && \
+            yes | /home/user/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=/home/user/.buildozer/android/platform/android-sdk --licenses || true && \
             cd /home/user/hostcvs && \
-            export BUILDOZER_WARN_ON_ROOT=0 && \
             buildozer android release
           "
 
