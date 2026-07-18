@@ -38,7 +38,8 @@ jobs:
             echo -e '\$LICENSE_HASHES' > /root/.buildozer/android/platform/android-sdk/licenses/android-sdk-license && \
             yes | /root/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=/root/.buildozer/android/platform/android-sdk --licenses || true && \
             cd /home/user/hostcvs && \
-            yes y | buildozer android release
+            export BUILDOZER_WARN_ON_ROOT=0 && \
+            buildozer android release
           "
 
     - name: Restore Runner Workspace Ownership
