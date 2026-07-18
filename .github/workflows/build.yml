@@ -40,9 +40,12 @@ jobs:
           autoconf \
           automake \
           libtool \
+          libtool-bin \
+          gettext \
           pkg-config \
           cmake \
-          ninja-build
+          ninja-build \
+          patch
 
     - name: Install Python Build Dependencies
       run: |
@@ -72,8 +75,11 @@ jobs:
           sed -i 's/# android.accept_sdk_license = False/android.accept_sdk_license = True/g' buildozer.spec
         fi
         
+        unset ANDROID_NDK
+        unset ANDROID_NDK_LATEST_HOME
         unset ANDROID_NDK_HOME
         unset ANDROID_NDK_ROOT
+        
         export ANDROID_NDK_HOME=$HOME/.buildozer/android/platform/android-ndk-r25b
         export ANDROID_NDK_ROOT=$HOME/.buildozer/android/platform/android-ndk-r25b
         
