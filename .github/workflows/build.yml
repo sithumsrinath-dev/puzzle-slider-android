@@ -9,45 +9,65 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
     - name: Checkout Source Code
       uses: actions/checkout@v4
 
-    - name: Run Buildozer Compilation Inside Docker Container
-      run: |
-        sudo chown -R 1000:1000 ${{ github.workspace }}
-        sudo chmod -R 777 ${{ github.workspace }}
-        
-        docker run --rm \
-          --entrypoint "" \
-          -v ${{ github.workspace }}:/home/user/hostcvs \
-          -v /home/runner/.buildozer:/root/.buildozer \
-          -e BUILDOZER_ALLOW_ORG_BUILD=1 \
-          kivy/buildozer:latest \
-          bash -c "
-            mkdir -p /root/.buildozer/android/platform/android-sdk/cmdline-tools/latest && \
-            mkdir -p /root/.buildozer/android/platform/android-sdk/tools/bin && \
-            mkdir -p /root/.buildozer/android/platform/android-sdk/licenses && \
-            wget -q https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O /tmp/cmdline-tools.zip && \
-            mkdir -p /tmp/cmdline-raw && \
-            unzip -q /tmp/cmdline-tools.zip -d /tmp/cmdline-raw && \
-            cp -r /tmp/cmdline-raw/cmdline-tools/* /root/.buildozer/android/platform/android-sdk/cmdline-tools/latest/ && \
-            ln -sf /root/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin/sdkmanager /root/.buildozer/android/platform/android-sdk/tools/bin/sdkmanager && \
-            LICENSE_HASHES='893547e6b492b10e2ea34726a995d8e63b61434d\nd56f5187479451eabf01fb7431302458d34d7756\n24333f8a63b6825ea9c5514f83c2829b004d1fee\n84831b9409646a918e30573bab4c9c91346d8abd' && \
-            echo -e '\$LICENSE_HASHES' > /root/.buildozer/android/platform/android-sdk/licenses/android-sdk-license && \
-            yes | /root/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=/root/.buildozer/android/platform/android-sdk --licenses || true && \
-            cd /home/user/hostcvs && \
-            sed -i 's/# android.accept_sdk_license = False/android.accept_sdk_license = True/g' buildozer.spec && \
-            export BUILDOZER_WARN_ON_ROOT=0 && \
-            /home/user/.venv/bin/python3 -m buildozer android release
-          "
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
 
-    - name: Restore Runner Workspace Ownership
-      if: always()
+    - name: Install System Dependencies
       run: |
-        sudo chown -R runner:docker ${{ github.workspace }}
+        sudo apt-get update
+        sudo apt-get install -y \
+          build-essential \
+          ccache \
+          git \
+          libffi-dev \
+          libssl-dev \
+          libgtk-3-dev \
+          libgstreamer1.0-dev \
+          gstreamer1.0-plugins-base \
+          gstreamer1.0-plugins-good \
+          zlib1g-dev \
+          openjdk-17-jdk \
+          unzip \
+          zip \
+          autoconf \
+          automake \
+          libtool \
+          pkg-config \
+          cmake \
+          ninja-build
+
+    - name: Install Python Build Dependencies
+      run: |
+        python -m pip install --upgrade pip setuptools wheel
+        python -m pip install --upgrade cython virtualenv buildozer kivy
+
+    - name: Pre-Setup Android SDK and Accept Licenses
+      run: |
+        mkdir -p $HOME/.buildozer/android/platform/android-sdk/cmdline-tools/latest
+        wget -q https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O /tmp/cmdline-tools.zip
+        mkdir -p /tmp/cmdline-raw
+        unzip -q /tmp/cmdline-tools.zip -d /tmp/cmdline-raw
+        cp -r /tmp/cmdline-raw/cmdline-tools/* $HOME/.buildozer/android/platform/android-sdk/cmdline-tools/latest/
+        
+        mkdir -p $HOME/.buildozer/android/platform/android-sdk/licenses
+        printf "893547e6b492b10e2ea34726a995d8e63b61434d\nd56f5187479451eabf01fb7431302458d34d7756\n24333f8a63b6825ea9c5514f83c2829b004d1fee\n84831b9409646a918e30573bab4c9c91346d8abd\n" > $HOME/.buildozer/android/platform/android-sdk/licenses/android-sdk-license
+        
+        yes | $HOME/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=$HOME/.buildozer/android/platform/android-sdk --licenses || true
+
+    - name: Build Android App Bundle (AAB) with Buildozer
+      run: |
+        if [ -f buildozer.spec ]; then
+          sed -i 's/# android.accept_sdk_license = False/android.accept_sdk_license = True/g' buildozer.spec
+        fi
+        buildozer android release
 
     - name: Upload Build Artifacts
       uses: actions/upload-artifact@v4
