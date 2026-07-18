@@ -17,8 +17,8 @@ jobs:
 
     - name: Fix Workspace Permissions for Docker Context
       run: |
-        chown -R 1000:1000 ${{ github.workspace }}
-        chmod -R 777 ${{ github.workspace }}
+        sudo chown -R 1000:1000 ${{ github.workspace }}
+        sudo chmod -R 777 ${{ github.workspace }}
 
     - name: Build Android Release AAB inside Stable Kivy Container
       uses: addnab/docker-run-action@v3
@@ -27,7 +27,6 @@ jobs:
         options: |
           -v ${{ github.workspace }}:/home/user/hostcvs
           -v /home/runner/.buildozer:/home/user/.buildozer
-          --user 1000:1000
         run: |
           cd /home/user/hostcvs
           export BUILDOZER_ALLOW_ORG_BUILD=1
