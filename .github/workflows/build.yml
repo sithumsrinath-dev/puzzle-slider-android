@@ -31,10 +31,19 @@ jobs:
         run: |
           cd /home/user/hostcvs
           
-          # Auto-accept all Android SDK licenses before building
+          # Force create Android SDK configuration folders for both environments
+          mkdir -p /home/user/.buildozer/android/platform/android-sdk/licenses
+          mkdir -p /root/.buildozer/android/platform/android-sdk/licenses
+          
+          # Inject pre-accepted Android SDK licenses to bypass interactive prompt (y/N)
+          echo -e "893547e6b492b10e2ea34726a995d8e63b61434d\nd56f5187479451eabf01fb7431302458d34d7756\n24333f8a63b6825ea9c5514f83c2829b004d1fee" > /home/user/.buildozer/android/platform/android-sdk/licenses/android-sdk-license
+          echo -e "893547e6b492b10e2ea34726a995d8e63b61434d\nd56f5187479451eabf01fb7431302458d34d7756\n24333f8a63b6825ea9c5514f83c2829b004d1fee" > /root/.buildozer/android/platform/android-sdk/licenses/android-sdk-license
+          
+          # Dynamically execute sdkmanager licenses acceptance if binary paths exist
           if [ -d "/home/user/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin" ]; then
             yes | /home/user/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin/sdkmanager --licenses || true
-          elif [ -d "/root/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin" ]; then
+          fi
+          if [ -d "/root/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin" ]; then
             yes | /root/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin/sdkmanager --licenses || true
           fi
           
