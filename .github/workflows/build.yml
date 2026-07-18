@@ -69,14 +69,11 @@ jobs:
     - name: Pre-accept Android SDK Licenses
       run: |
         mkdir -p ~/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin
-        # Buildozer install steps setup Android SDK path dynamically, so we force accept through standard system path if available, 
-        # and configure buildozer's internal environment to auto-accept licenses.
         mkdir -p ~/.android
         touch ~/.android/repositories.cfg
         
     - name: Build Android Release APK with Buildozer
       run: |
-        # Set environment variable to strictly auto-accept licenses during sdkmanager runtime inside buildozer
         export BUILDOZER_ALLOW_ORG_BUILD=1
         yes | buildozer android release
       env:
@@ -88,7 +85,7 @@ jobs:
         LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.11.15/x64/lib
 
     - name: Upload Build Artifacts
-      uses: actions/artifacts-upload@v4
+      uses: actions/upload-artifact@v4
       with:
         name: release-apk
         path: bin/*.apk
