@@ -143,7 +143,6 @@ android.ndk_api = 24
 #android.add_libs_x86_64 = libs/android-x86_64/libsqlite3_android.so
 
 # (list) Android architectures to build for, choices: armeabi-v7a, arm64-v8a, x86, x86_64
-# In past, many devices had armeabi-v7a inside, but current standard is arm64-v8a
 android.archs = armeabi-v7a, arm64-v8a
 
 # (bool) Enable Android extra justification inside text layout
@@ -154,6 +153,9 @@ android.archs = armeabi-v7a, arm64-v8a
 
 # (bool) Enable Gradle daemon (default is True)
 #android.enable_gradle_daemon = True
+
+# (str) target outputs given by the build. For Play Store release, use aab
+android.release_artifact = aab
 
 # (str) Log level (0 = error only, 1 = info, 2 = debug and big logs)
 log_level = 2
