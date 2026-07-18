@@ -40,6 +40,7 @@ jobs:
             yes | /root/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=/root/.buildozer/android/platform/android-sdk --licenses || true && \
             cd /home/user/hostcvs && \
             sed -i 's/# android.accept_sdk_license = False/android.accept_sdk_license = True/g' buildozer.spec && \
+            export BUILDOZER_WARN_ON_ROOT=0 && \
             /home/user/.venv/bin/python3 -m buildozer android release
           "
 
