@@ -55,7 +55,8 @@ jobs:
           automake \
           libtool \
           pkg-config \
-          cmake
+          cmake \
+          wget
 
     - name: Install Python Dependencies
       run: |
@@ -66,16 +67,133 @@ jobs:
       run: |
         pip install git+https://github.com/kivy/buildozer.git@master
 
-    - name: Setup Android SDK and Tools Framework
+    - name: Pre-Setup Android SDK and Inject Tools Path
       run: |
-        mkdir -p ~/.buildozer/android/platform/android-sdk/cmdline-tools/latest
+        # Force strict directory infrastructure layout before buildozer starts
+        mkdir -p /home/runner/.buildozer/android/platform/android-sdk/cmdline-tools/latest
+        
+        # Download verified standard commandlinetools archive
         wget -q https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O cmdline-tools.zip
         unzip -q cmdline-tools.zip
-        mv cmdline-tools/* ~/.buildozer/android/platform/android-sdk/cmdline-tools/latest/
+        
+        # Inject standard binaries into the layout context
+        mv cmdline-tools/* /home/runner/.buildozer/android/platform/android-sdk/cmdline-tools/latest/
+        
+        # Create legacy fallback symbolic link structure to prevent the missing tools/bin/sdkmanager exception
+        mkdir -p /home/runner/.buildozer/android/platform/android-sdk/tools/bin
+        ln -s /home/runner/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin/sdkmanager /home/runner/.buildozer/android/platform/android-sdk/tools/bin/sdkmanager
+        
+        # Global compliance for standard android licenses context mapping
         mkdir -p ~/.android
         touch ~/.android/repositories.cfg
-        yes | ~/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin/sdkmanager --licenses
+        yes | /home/runner/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin/sdkmanager --licenses
+
+    - name: Build Android Release AAB with Buildozer
+      run: |
+        export BUILDOZER_ALLOW_ORG_BUILD=1
+        buildozer android release
+      env:
+        pythonLocation: /opt/hostedtoolcache/Python/3.11.15/x64
+        PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.11.15/x64/lib/pkgconfig
+        Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.15/x64
+        Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.15/x64
+        Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.15/x64
+        LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.11.15/x64/lib
+
+    - name: Upload Build Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: release-aab
+        path: bin/*.aabname: Build Puzzle Slider AAB
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Source Code
+      uses: actions/checkout@v4
+
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11.15'
+
+    - name: Install System Dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y --no-install-recommends \
+          build-essential \
+          git \
+          ffmpeg \
+          libsdl2-dev \
+          libsdl2-image-dev \
+          libsdl2-mixer-dev \
+          libsdl2-ttf-dev \
+          libportmidi-dev \
+          libswscale-dev \
+          libavformat-dev \
+          libavcodec-dev \
+          zlib1g-dev \
+          libgstreamer1.0-dev \
+          gstreamer1.0-plugins-base \
+          gstreamer1.0-plugins-good \
+          gstreamer1.0-plugins-bad \
+          gstreamer1.0-plugins-ugly \
+          gstreamer1.0-libav \
+          libmtdev-dev \
+          xclip \
+          xsel \
+          libjpeg-dev \
+          openjdk-17-jdk \
+          unzip \
+          zip \
+          libffi-dev \
+          libssl-dev \
+          autoconf \
+          automake \
+          libtool \
+          pkg-config \
+          cmake \
+          wget
+
+    - name: Install Python Dependencies
+      run: |
+        python -m pip install --upgrade pip setuptools wheel
+        pip install cython==0.29.36 virtualenv
+
+    - name: Install Buildozer
+      run: |
+        pip install git+https://github.com/kivy/buildozer.git@master
+
+    - name: Pre-Setup Android SDK and Inject Tools Path
+      run: |
+        # Force strict directory infrastructure layout before buildozer starts
+        mkdir -p /home/runner/.buildozer/android/platform/android-sdk/cmdline-tools/latest
         
+        # Download verified standard commandlinetools archive
+        wget -q https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O cmdline-tools.zip
+        unzip -q cmdline-tools.zip
+        
+        # Inject standard binaries into the layout context
+        mv cmdline-tools/* /home/runner/.buildozer/android/platform/android-sdk/cmdline-tools/latest/
+        
+        # Create legacy fallback symbolic link structure to prevent the missing tools/bin/sdkmanager exception
+        mkdir -p /home/runner/.buildozer/android/platform/android-sdk/tools/bin
+        ln -s /home/runner/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin/sdkmanager /home/runner/.buildozer/android/platform/android-sdk/tools/bin/sdkmanager
+        
+        # Global compliance for standard android licenses context mapping
+        mkdir -p ~/.android
+        touch ~/.android/repositories.cfg
+        yes | /home/runner/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin/sdkmanager --licenses
+
     - name: Build Android Release AAB with Buildozer
       run: |
         export BUILDOZER_ALLOW_ORG_BUILD=1
