@@ -15,81 +15,28 @@ jobs:
     - name: Checkout Source Code
       uses: actions/checkout@v4
 
-    - name: Set up Python 3.11
-      uses: actions/setup-python@v5
+    - name: Fix Workspace Permissions for Docker Context
+      run: |
+        chown -R 1000:1000 ${{ github.workspace }}
+        chmod -R 777 ${{ github.workspace }}
+
+    - name: Build Android Release AAB inside Stable Kivy Container
+      uses: addnab/docker-run-action@v3
       with:
-        python-version: '3.11.15'
+        image: kivy/buildozer:latest
+        options: |
+          -v ${{ github.workspace }}:/home/user/hostcvs
+          -v /home/runner/.buildozer:/home/user/.buildozer
+          --user 1000:1000
+        run: |
+          cd /home/user/hostcvs
+          export BUILDOZER_ALLOW_ORG_BUILD=1
+          buildozer android release
 
-    - name: Install System Dependencies
+    - name: Restore Runner Workspace Ownership
+      if: always()
       run: |
-        sudo apt-get update
-        sudo apt-get install -y --no-install-recommends \
-          build-essential \
-          git \
-          ffmpeg \
-          libsdl2-dev \
-          libsdl2-image-dev \
-          libsdl2-mixer-dev \
-          libsdl2-ttf-dev \
-          libportmidi-dev \
-          libswscale-dev \
-          libavformat-dev \
-          libavcodec-dev \
-          zlib1g-dev \
-          libgstreamer1.0-dev \
-          gstreamer1.0-plugins-base \
-          gstreamer1.0-plugins-good \
-          gstreamer1.0-plugins-bad \
-          gstreamer1.0-plugins-ugly \
-          gstreamer1.0-libav \
-          libmtdev-dev \
-          xclip \
-          xsel \
-          libjpeg-dev \
-          openjdk-17-jdk \
-          unzip \
-          zip \
-          libffi-dev \
-          libssl-dev \
-          autoconf \
-          automake \
-          libtool \
-          pkg-config \
-          cmake \
-          wget
-
-    - name: Install Python Dependencies
-      run: |
-        python -m pip install --upgrade pip setuptools wheel
-        pip install cython==0.29.36 virtualenv
-
-    - name: Install Buildozer
-      run: |
-        pip install git+https://github.com/kivy/buildozer.git@master
-
-    - name: Pre-Setup Android SDK and Inject Tools Path
-      run: |
-        mkdir -p /home/runner/.buildozer/android/platform/android-sdk/cmdline-tools/latest
-        wget -q https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O cmdline-tools.zip
-        unzip -q cmdline-tools.zip
-        mv cmdline-tools/* /home/runner/.buildozer/android/platform/android-sdk/cmdline-tools/latest/
-        mkdir -p /home/runner/.buildozer/android/platform/android-sdk/tools/bin
-        ln -s /home/runner/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin/sdkmanager /home/runner/.buildozer/android/platform/android-sdk/tools/bin/sdkmanager
-        mkdir -p ~/.android
-        touch ~/.android/repositories.cfg
-        yes | /home/runner/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin/sdkmanager --licenses
-
-    - name: Build Android Release AAB with Buildozer
-      run: |
-        export BUILDOZER_ALLOW_ORG_BUILD=1
-        buildozer android release
-      env:
-        pythonLocation: /opt/hostedtoolcache/Python/3.11.15/x64
-        PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.11.15/x64/lib/pkgconfig
-        Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.15/x64
-        Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.15/x64
-        Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.15/x64
-        LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.11.15/x64/lib
+        sudo chown -R runner:docker ${{ github.workspace }}
 
     - name: Upload Build Artifacts
       uses: actions/upload-artifact@v4
