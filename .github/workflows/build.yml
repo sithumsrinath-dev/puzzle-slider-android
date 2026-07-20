@@ -54,19 +54,20 @@ jobs:
         python -m pip install --upgrade pip setuptools wheel
         python -m pip install --upgrade cython virtualenv buildozer kivy
 
-    - name: Set up Android SDK Command-line Tools
+    - name: Setup Android SDK and Command-line Tools Manually
       run: |
         mkdir -p /home/runner/.buildozer/android/platform/android-sdk/cmdline-tools
-        wget -q https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -O cmdline-tools.zip
-        unzip -q cmdline-tools.zip -d /tmp/cmdline-tools
+        wget -q https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -O /tmp/cmdline-tools.zip
+        unzip -q /tmp/cmdline-tools.zip -d /tmp/unzipped-tools
         mkdir -p /home/runner/.buildozer/android/platform/android-sdk/cmdline-tools/latest
-        mv /tmp/cmdline-tools/cmdline-tools/* /home/runner/.buildozer/android/platform/android-sdk/cmdline-tools/latest/
-        rm cmdline-tools.zip
-        
+        cp -r /tmp/unzipped-tools/cmdline-tools/* /home/runner/.buildozer/android/platform/android-sdk/cmdline-tools/latest/
+        rm -rf /tmp/cmdline-tools.zip /tmp/unzipped-tools
+
         mkdir -p /home/runner/.android
         touch /home/runner/.android/repositories.cfg
-        
-        yes | /home/runner/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=/home/runner/.buildozer/android/platform/android-sdk --licenses || true
+
+        export PATH=$PATH:/home/runner/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin
+        yes | sdkmanager --sdk_root=/home/runner/.buildozer/android/platform/android-sdk --licenses || true
 
     - name: Verify Assets Existence
       run: |
