@@ -73,6 +73,7 @@ jobs:
         unset ANDROID_NDK_ROOT
         
         export HOME=/home/runner
+        export BUILDOZER_ALLOW_ORG_TEST_DOMAIN=1
         buildozer android release
 
     - name: Upload Build Artifacts
