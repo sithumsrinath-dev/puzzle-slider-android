@@ -66,10 +66,6 @@ jobs:
 
     - name: Build Android App Bundle (AAB) with Buildozer
       run: |
-        if [ -f buildozer.spec ]; then
-          sed -i 's/# android.accept_sdk_license = False/android.accept_sdk_license = True/g' buildozer.spec
-        fi
-        
         unset ANDROID_NDK
         unset ANDROID_NDK_LATEST_HOME
         unset ANDROID_NDK_HOME
