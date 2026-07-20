@@ -1,28 +1,87 @@
-[app]
-title = Puzzle Slider
-package.name = puzzleslider
-package.domain = org.sithumsrinath
-source.dir = .
-source.include_exts = py,png,jpg,kv,atlas,json
-source.include_patterns = assets/*,images/*.png
-version = 1.0.0
-requirements = python3,kivy,six,filetype,urllib3,certifi,chardet,requests,idna,openssl
-android.archs = armeabi-v7a, arm64-v8a
-icon.filename = icon.png
-presplash.filename = presplash.jpg
-orientation = portrait
-fullscreen = 1
-android.permissions = INTERNET
-android.api = 34
-android.minapi = 24
-android.ndk = 25b
-android.private_storage = True
-android.copy_libs = 1
-android.accept_sdk_license = True
-android.release_artifact = aab
-log_level = 2
-warn_on_root = 1
+name: Build Puzzle Slider AAB
 
-[buildozer]
-log_level = 2
-warn_on_root = 1
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+
+    steps:
+    - name: Checkout Source Code
+      uses: actions/checkout@v4
+
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install System Dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          build-essential \
+          ccache \
+          git \
+          libffi-dev \
+          libssl-dev \
+          libgtk-3-dev \
+          zlib1g-dev \
+          openjdk-11-jdk \
+          unzip \
+          zip \
+          autoconf \
+          automake \
+          libtool \
+          libtool-bin \
+          gettext \
+          pkg-config \
+          cmake \
+          ninja-build \
+          patch
+
+    - name: Install Python Build Dependencies
+      run: |
+        python -m pip install --upgrade pip setuptools wheel
+        python -m pip install --upgrade cython virtualenv buildozer kivy
+
+    - name: Setup Android SDK and Command Line Tools
+      run: |
+        export ANDROID_HOME=$HOME/.buildozer/android/platform/android-sdk
+        mkdir -p $ANDROID_HOME/cmdline-tools/latest
+        
+        wget -q https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O /tmp/cmdline-tools.zip
+        unzip -q /tmp/cmdline-tools.zip -d /tmp/cmdline-extract
+        cp -r /tmp/cmdline-extract/cmdline-tools/* $ANDROID_HOME/cmdline-tools/latest/
+        
+        mkdir -p $ANDROID_HOME/licenses
+        printf "893547e6b492b10e2ea34726a995d8e63b61434d\nd56f5187479451eabf01fb7431302458d34d7756\n24333f8a63b6825ea9c5514f83c2829b004d1fee\n84831b9409646a918e30573bab4c9c91346d8abd\n" > $ANDROID_HOME/licenses/android-sdk-license
+        
+        yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --sdk_root=$ANDROID_HOME --licenses || true
+        $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --sdk_root=$ANDROID_HOME "platform-tools" "platforms;android-34" "build-tools;34.0.0"
+
+    - name: Build Android App Bundle (AAB) with Buildozer
+      run: |
+        if [ -f buildozer.spec ]; then
+          sed -i 's/# android.accept_sdk_license = False/android.accept_sdk_license = True/g' buildozer.spec
+        fi
+        
+        unset ANDROID_NDK
+        unset ANDROID_NDK_LATEST_HOME
+        unset ANDROID_NDK_HOME
+        unset ANDROID_NDK_ROOT
+        
+        export ANDROID_NDK_HOME=$HOME/.buildozer/android/platform/android-ndk-r25b
+        export ANDROID_NDK_ROOT=$HOME/.buildozer/android/platform/android-ndk-r25b
+        
+        buildozer android release
+
+    - name: Upload Build Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: release-aab
+        path: bin/*.aab
