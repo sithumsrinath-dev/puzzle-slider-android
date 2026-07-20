@@ -49,21 +49,6 @@ jobs:
         python -m pip install --upgrade pip setuptools wheel
         python -m pip install --upgrade cython virtualenv buildozer kivy
 
-    - name: Setup Android SDK and Build Tools
-      run: |
-        export ANDROID_HOME=$HOME/.buildozer/android/platform/android-sdk
-        mkdir -p $ANDROID_HOME/cmdline-tools/latest
-        
-        wget -q https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O /tmp/cmdline-tools.zip
-        unzip -q /tmp/cmdline-tools.zip -d /tmp/cmdline-extract
-        cp -r /tmp/cmdline-extract/cmdline-tools/* $ANDROID_HOME/cmdline-tools/latest/
-        
-        mkdir -p $ANDROID_HOME/licenses
-        printf "893547e6b492b10e2ea34726a995d8e63b61434d\nd56f5187479451eabf01fb7431302458d34d7756\n24333f8a63b6825ea9c5514f83c2829b004d1fee\n84831b9409646a918e30573bab4c9c91346d8abd\n" > $ANDROID_HOME/licenses/android-sdk-license
-        
-        yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --sdk_root=$ANDROID_HOME --licenses || true
-        $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --sdk_root=$ANDROID_HOME "platform-tools" "platforms;android-33" "build-tools;33.0.2" "tools"
-
     - name: Generate Valid Buildozer Spec
       run: |
         rm -f buildozer.spec
@@ -80,14 +65,14 @@ jobs:
 
     - name: Build Android App Bundle (AAB) with Buildozer
       run: |
+        unset ANDROID_SDK_ROOT
+        unset ANDROID_HOME
         unset ANDROID_NDK
         unset ANDROID_NDK_LATEST_HOME
         unset ANDROID_NDK_HOME
         unset ANDROID_NDK_ROOT
         
-        export ANDROID_NDK_HOME=$HOME/.buildozer/android/platform/android-ndk-r25b
-        export ANDROID_NDK_ROOT=$HOME/.buildozer/android/platform/android-ndk-r25b
-        
+        export HOME=/home/runner
         buildozer android release
 
     - name: Upload Build Artifacts
