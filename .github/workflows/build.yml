@@ -55,6 +55,13 @@ jobs:
         python -m pip install --upgrade pip setuptools wheel
         python -m pip install --upgrade cython virtualenv buildozer kivy
 
+    - name: Accept Android SDK Licenses
+      run: |
+        mkdir -p /home/runner/.buildozer/android/platform/android-sdk/licenses
+        echo -e "\n8933bad161af4b78b868bd014aa3664d06aef6cc" > /home/runner/.buildozer/android/platform/android-sdk/licenses/android-sdk-license
+        echo -e "\n24333f8a63b6825ea9c5514f83c2829b004d1fb5" >> /home/runner/.buildozer/android/platform/android-sdk/licenses/android-sdk-license
+        echo -e "\nd56f5187479451eabf01fb78af6dfcb131a6486e" >> /home/runner/.buildozer/android/platform/android-sdk/licenses/android-sdk-license
+
     - name: Build Android App Bundle (AAB) with Buildozer
       run: |
         unset ANDROID_SDK_ROOT
