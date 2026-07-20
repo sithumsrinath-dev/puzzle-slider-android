@@ -54,12 +54,12 @@ jobs:
         python -m pip install --upgrade pip setuptools wheel
         python -m pip install --upgrade cython virtualenv buildozer kivy
 
-    - name: Prepare Android SDK Command-line Tools
+    - name: Prepare Android SDK Command-line Tools Properly
       run: |
-        mkdir -p /home/runner/.buildozer/android/platform/android-sdk/cmdline-tools/latest
+        mkdir -p /home/runner/.buildozer/android/platform/android-sdk/cmdline-tools
         wget https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -O cmdline-tools.zip
         unzip -q cmdline-tools.zip -d temp_tools
-        mv temp_tools/cmdline-tools/* /home/runner/.buildozer/android/platform/android-sdk/cmdline-tools/latest/
+        mv temp_tools/cmdline-tools /home/runner/.buildozer/android/platform/android-sdk/cmdline-tools/latest
         rm -rf cmdline-tools.zip temp_tools
 
     - name: Accept Android SDK Licenses
