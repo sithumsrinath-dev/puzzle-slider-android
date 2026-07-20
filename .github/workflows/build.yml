@@ -54,13 +54,31 @@ jobs:
         python -m pip install --upgrade pip setuptools wheel
         python -m pip install --upgrade cython virtualenv buildozer kivy
 
-    - name: Pre-accept Android SDK Licenses
+    - name: Set up Android SDK Command-line Tools
       run: |
+        mkdir -p /home/runner/.buildozer/android/platform/android-sdk/cmdline-tools
+        wget -q https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -O cmdline-tools.zip
+        unzip -q cmdline-tools.zip -d /tmp/cmdline-tools
+        mkdir -p /home/runner/.buildozer/android/platform/android-sdk/cmdline-tools/latest
+        mv /tmp/cmdline-tools/cmdline-tools/* /home/runner/.buildozer/android/platform/android-sdk/cmdline-tools/latest/
+        rm cmdline-tools.zip
+        
         mkdir -p /home/runner/.android
-        echo "24333f8a43b681623c8ab30fa1963ba54f16d985" > /home/runner/.android/repositories.cfg
-        mkdir -p /home/runner/.buildozer/android/platform/android-sdk/licenses
-        echo -e "\n84831b8409b46573b22e5088439edf62a90d4d2e" > /home/runner/.buildozer/android/platform/android-sdk/licenses/android-sdk-license
-        echo -e "\n24333f8a43b681623c8ab30fa1963ba54f16d985" >> /home/runner/.buildozer/android/platform/android-sdk/licenses/android-sdk-license
+        touch /home/runner/.android/repositories.cfg
+        
+        yes | /home/runner/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=/home/runner/.buildozer/android/platform/android-sdk --licenses || true
+
+    - name: Verify Assets Existence
+      run: |
+        if [ ! -f "icon.png" ]; then
+          echo "Error: icon.png is missing!"
+          exit 1
+        fi
+        if [ ! -f "presplash.jpg" ]; then
+          echo "Error: presplash.jpg is missing!"
+          exit 1
+        fi
+        echo "All assets verified successfully."
 
     - name: Build Android App Bundle (AAB) with Buildozer
       run: |
