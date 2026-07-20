@@ -1,83 +1,158 @@
-name: Build Puzzle Slider AAB
+[app]
 
-on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
-  workflow_dispatch:
+# (str) Title of your application
+title = Puzzle Slider
 
-jobs:
-  build:
-    runs-on: ubuntu-22.04
+# (str) Package name
+package.name = puzzleslider
 
-    steps:
-    - name: Checkout Source Code
-      uses: actions/checkout@v4
+# (str) Package domain (needed for android packaging)
+package.domain = org.senu
 
-    - name: Set up Python 3.11
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.11'
+# (list) Source files to include (let git decide)
+source.include_exts = py,png,jpg,kv,atlas
 
-    - name: Install System Dependencies
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y \
-          build-essential \
-          ccache \
-          git \
-          libffi-dev \
-          libssl-dev \
-          libgtk-3-dev \
-          zlib1g-dev \
-          openjdk-11-jdk \
-          unzip \
-          zip \
-          autoconf \
-          automake \
-          libtool \
-          libtool-bin \
-          gettext \
-          pkg-config \
-          cmake \
-          ninja-build \
-          patch
+# (list) List of inclusions using pattern matching
+#source.include_patterns = assets/*,images/*.png
 
-    - name: Install Python Build Dependencies
-      run: |
-        python -m pip install --upgrade pip setuptools wheel
-        python -m pip install --upgrade cython virtualenv buildozer kivy
+# (list) Source files to exclude (let git decide)
+#source.exclude_exts = spec
 
-    - name: Setup Android SDK and Command Line Tools
-      run: |
-        export ANDROID_HOME=$HOME/.buildozer/android/platform/android-sdk
-        mkdir -p $ANDROID_HOME/cmdline-tools/latest
-        
-        wget -q https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O /tmp/cmdline-tools.zip
-        unzip -q /tmp/cmdline-tools.zip -d /tmp/cmdline-extract
-        cp -r /tmp/cmdline-extract/cmdline-tools/* $ANDROID_HOME/cmdline-tools/latest/
-        
-        mkdir -p $ANDROID_HOME/licenses
-        printf "893547e6b492b10e2ea34726a995d8e63b61434d\nd56f5187479451eabf01fb7431302458d34d7756\n24333f8a63b6825ea9c5514f83c2829b004d1fee\n84831b9409646a918e30573bab4c9c91346d8abd\n" > $ANDROID_HOME/licenses/android-sdk-license
-        
-        yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --sdk_root=$ANDROID_HOME --licenses || true
-        $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --sdk_root=$ANDROID_HOME "platform-tools" "platforms;android-34" "build-tools;34.0.0"
+# (list) List of directory to exclude
+#source.exclude_dirs = tests, bin
 
-    - name: Build Android App Bundle (AAB) with Buildozer
-      run: |
-        unset ANDROID_NDK
-        unset ANDROID_NDK_LATEST_HOME
-        unset ANDROID_NDK_HOME
-        unset ANDROID_NDK_ROOT
-        
-        export ANDROID_NDK_HOME=$HOME/.buildozer/android/platform/android-ndk-r25b
-        export ANDROID_NDK_ROOT=$HOME/.buildozer/android/platform/android-ndk-r25b
-        
-        buildozer android release
+# (list) List of exclusions using pattern matching
+#source.exclude_patterns = license,images/*.jpg
 
-    - name: Upload Build Artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: release-aab
-        path: bin/*.aab
+# (str) Application versioning (method 1)
+version = 1.0
+
+# (list) Application requirements
+# comma separated e.g. requirements = sqlite3,kivy
+requirements = python3,kivy
+
+# (list) Custom source folders for python modules
+# anzu = source.include_exts path
+#source.dirs =
+
+# (str) Presplash of the application
+#presplash.filename = %(source.dir)s/presplash.jpg
+
+# (str) Icon of the application
+#icon.filename = %(source.dir)s/icon.png
+
+# (list) Supported orientations
+# Valid orientations: landscape, portrait, all-upright, all-reverse or reverse-landscape; or a comma-separated list of these
+orientation = portrait
+
+# (list) List of service to declare
+#services = NAME:ENTRYPOINT_TO_PYTHON_SCRIPT,...,NAME:ENTRYPOINT_TO_PYTHON_SCRIPT
+
+#
+# OSX Specific
+#
+
+#
+# Author
+#
+
+# (int) Target Android API, should be as high as possible.
+#android.api = 33
+
+# (int) Minimum API your APK will support.
+#android.minapi = 21
+
+# (int) Android SDK version to use
+#android.sdk = 33
+
+# (str) Android NDK version to use
+android.ndk = 25b
+
+# (int) Android NDK API to use. This is the minimum API supported by your app.
+#android.ndk_api = 21
+
+# (bool) Use --private data storage (True) or --public storage (False)
+#android.private_storage = True
+
+# (list) Permissions
+#android.permissions = INTERNET
+
+# (list) features (adds <uses-feature> tags to AndroidManifest.xml)
+#android.features = android.hardware.usb.host
+
+# (str) Bootstrap to use for android builds
+#android.bootstrap = sdl2
+
+# (str) XML file to inject into AndroidManifest.xml
+#android.manifest.xml =
+
+# (str) Extra XML files to inject into AndroidManifest.xml
+#android.manifest.application_inject =
+
+# (str) Extra Java classes to add
+#android.add_java_jar =
+
+# (str) Extra Java sources to add
+#android.add_java_src =
+
+# (str) Gradle dependencies to add
+#android.add_gradle_dependencies =
+
+# (bool) Enable AndroidX support
+android.androidx = True
+
+# (list) AAR libraries to load
+#android.aar_libs =
+
+# (list) The comma-separated list of extra directories to add to the python path
+#android.add_python_path =
+
+# (list) List of Java .jar files to add to the libs/ directory
+#android.add_jars =
+
+# (list) The comma-separated list of additional assets to pack in the APK
+#android.add_assets =
+
+# (list) Gradle repositories to add
+#android.gradle_repositories =
+
+# (bool) Copy library to the build dir when using --private-storage=True
+#android.copy_libs = 1
+
+# (str) The Android arch to build for, choices: armeabi-v7a, arm64-v8a, x86, x86_64
+android.archs = arm64-v8a, armeabi-v7a
+
+# (bool) Enables Android Lint inspection
+#android.lint = False
+
+# (bool) Enable use of incremental builds
+#android.incremental = False
+
+# (str) python-for-android branch to use
+#p4a.branch = master
+
+# (str) Ouput format, either apk or aar or aab
+android.output_format = aab
+
+[buildozer]
+
+# (int) Log level (0 = error, 1 = info, 2 = debug (with command output))
+log_level = 2
+
+# (int) Display warning if buildozer is run as root (0 = False, 1 = True)
+warn_root = 1
+
+# (str) Path to build artifact, default is ./.buildozer
+#bin_dir = ./bin
+
+# (str) Path to extra buildozer dir
+#build_dir = ~/.buildozer
+
+# (str) Builder cache directory
+#cache_dir = ~/.buildozer/cache
+
+# (str) Android platform API version
+#android.platform_api = 33
+
+# (str) Accept SDK license
+android.accept_sdk_license = True
