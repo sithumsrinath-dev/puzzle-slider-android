@@ -54,17 +54,13 @@ jobs:
         python -m pip install --upgrade pip setuptools wheel
         python -m pip install --upgrade cython virtualenv buildozer kivy
 
-    - name: Verify Assets Existence
+    - name: Pre-accept Android SDK Licenses
       run: |
-        if [ ! -f "icon.png" ]; then
-          echo "Error: icon.png is missing!"
-          exit 1
-        fi
-        if [ ! -f "presplash.jpg" ]; then
-          echo "Error: presplash.jpg is missing!"
-          exit 1
-        fi
-        echo "All assets (icon.png, presplash.jpg) verified successfully."
+        mkdir -p /home/runner/.android
+        echo "24333f8a43b681623c8ab30fa1963ba54f16d985" > /home/runner/.android/repositories.cfg
+        mkdir -p /home/runner/.buildozer/android/platform/android-sdk/licenses
+        echo -e "\n84831b8409b46573b22e5088439edf62a90d4d2e" > /home/runner/.buildozer/android/platform/android-sdk/licenses/android-sdk-license
+        echo -e "\n24333f8a43b681623c8ab30fa1963ba54f16d985" >> /home/runner/.buildozer/android/platform/android-sdk/licenses/android-sdk-license
 
     - name: Build Android App Bundle (AAB) with Buildozer
       run: |
