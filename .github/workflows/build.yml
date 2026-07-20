@@ -64,8 +64,13 @@ jobs:
         yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --sdk_root=$ANDROID_HOME --licenses || true
         $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --sdk_root=$ANDROID_HOME "platform-tools" "platforms;android-34" "build-tools;34.0.0"
 
+    - name: Initialize Buildozer Spec if Missing
+      run: |
+        if [ ! -f "buildozer.spec" ]; then
+          buildozer init
+        fi
+
     - name: Build Android App Bundle (AAB) with Buildozer
-      working-directory: ${{ github.workspace }}
       run: |
         unset ANDROID_NDK
         unset ANDROID_NDK_LATEST_HOME
@@ -75,7 +80,7 @@ jobs:
         export ANDROID_NDK_HOME=$HOME/.buildozer/android/platform/android-ndk-r25b
         export ANDROID_NDK_ROOT=$HOME/.buildozer/android/platform/android-ndk-r25b
         
-        python3 -m buildozer android release
+        buildozer android release
 
     - name: Upload Build Artifacts
       uses: actions/upload-artifact@v4
