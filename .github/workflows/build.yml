@@ -54,20 +54,21 @@ jobs:
         python -m pip install --upgrade pip setuptools wheel
         python -m pip install --upgrade cython virtualenv buildozer kivy
 
-    - name: Prepare Android SDK Command-line Tools Properly
+    - name: Setup Android SDK and Build-Tools Manually
       run: |
-        mkdir -p /home/runner/.buildozer/android/platform/android-sdk/cmdline-tools
+        ANDROID_HOME="/home/runner/.buildozer/android/platform/android-sdk"
+        mkdir -p $ANDROID_HOME/cmdline-tools
+        
+        # Download and setup commandline-tools
         wget https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -O cmdline-tools.zip
         unzip -q cmdline-tools.zip -d temp_tools
-        mv temp_tools/cmdline-tools /home/runner/.buildozer/android/platform/android-sdk/cmdline-tools/latest
+        mv temp_tools/cmdline-tools $ANDROID_HOME/cmdline-tools/latest
         rm -rf cmdline-tools.zip temp_tools
 
-    - name: Accept Android SDK Licenses
-      run: |
-        mkdir -p /home/runner/.buildozer/android/platform/android-sdk/licenses
-        echo -e "\n8933bad161af4b78b868bd014aa3664d06aef6cc" > /home/runner/.buildozer/android/platform/android-sdk/licenses/android-sdk-license
-        echo -e "\n24333f8a63b6825ea9c5514f83c2829b004d1fb5" >> /home/runner/.buildozer/android/platform/android-sdk/licenses/android-sdk-license
-        echo -e "\nd56f5187479451eabf01fb78af6dfcb131a6486e" >> /home/runner/.buildozer/android/platform/android-sdk/licenses/android-sdk-license
+        # Accept licenses and install platform-tools and build-tools
+        export PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin
+        yes | sdkmanager --licenses
+        sdkmanager "platform-tools" "build-tools;33.0.2" "platforms;android-33"
 
     - name: Build Android App Bundle (AAB) with Buildozer
       run: |
