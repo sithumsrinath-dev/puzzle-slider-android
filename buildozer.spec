@@ -1,5 +1,3 @@
-[app]
-
 # (str) Title of your application
 title = Puzzle Slider
 
@@ -8,9 +6,6 @@ package.name = puzzleslider
 
 # (str) Package domain (needed for android packaging)
 package.domain = org.senu
-
-# (str) Source code where the main.py lives
-source.dir = .
 
 # (list) Source files to include (let git decide)
 source.include_exts = py,png,jpg,kv,atlas
