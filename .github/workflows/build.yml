@@ -54,22 +54,6 @@ jobs:
         python -m pip install --upgrade pip setuptools wheel
         python -m pip install --upgrade cython virtualenv buildozer kivy
 
-    - name: Generate Valid Buildozer Spec
-      run: |
-        rm -f buildozer.spec
-        buildozer init
-        sed -i 's/# title = My Application/title = Sliding Puzzle Game/g' buildozer.spec
-        sed -i 's/# package.name = myapp/package.name = puzzleslider/g' buildozer.spec
-        sed -i 's/# package.domain = org.example/package.domain = org.senu/g' buildozer.spec
-        sed -i 's/# source.include_exts = py,png,jpg,kv,atlas/source.include_exts = py,png,jpg,kv,atlas/g' buildozer.spec
-        sed -i 's/# version = 0.1/version = 1.0/g' buildozer.spec
-        sed -i 's/# requirements = python3,kivy/requirements = python3,kivy/g' buildozer.spec
-        sed -i 's/# orientation = portrait/orientation = portrait/g' buildozer.spec
-        sed -i 's/# presplash.filename = %(source.dir)s\/data\/presplash.png/presplash.filename = %(source.dir)s\/presplash.jpg/g' buildozer.spec
-        sed -i 's/# icon.filename = %(source.dir)s\/data\/icon.png/icon.filename = %(source.dir)s\/icon.png/g' buildozer.spec
-        sed -i 's/# android.accept_sdk_license = False/android.accept_sdk_license = True/g' buildozer.spec
-        sed -i 's/# fullscreen = 0/fullscreen = 1/g' buildozer.spec
-
     - name: Build Android App Bundle (AAB) with Buildozer
       run: |
         unset ANDROID_SDK_ROOT
