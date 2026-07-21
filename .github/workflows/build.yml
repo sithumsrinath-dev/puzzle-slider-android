@@ -58,27 +58,37 @@ jobs:
       run: |
         rm -f buildozer.spec
         buildozer init
+        
+        # Safely update buildozer.spec using Regex without breaking Kivy/Buildozer variables
         python3 -c "
-        import configparser
+        import re
 
-        config = configparser.ConfigParser(interpolation=None)
-        config.read('buildozer.spec')
+        with open('buildozer.spec', 'r') as f:
+            content = f.read()
 
-        if 'app' in config:
-            config['app']['title'] = 'Sliding Puzzle Ultimate'
-            config['app']['package.name'] = 'puzzleslider'
-            config['app']['package.domain'] = 'org.senu'
-            config['app']['source.include_exts'] = 'py,png,jpg,kv,atlas'
-            config['app']['version'] = '1.0'
-            config['app']['requirements'] = 'python3,kivy'
-            config['app']['orientation'] = 'portrait'
-            config['app']['presplash.filename'] = '%(source.dir)s/presplash.jpg'
-            config['app']['icon.filename'] = '%(source.dir)s/icon.png'
-            config['app']['android.accept_sdk_license'] = 'True'
-            config['app']['fullscreen'] = '1'
+        parts = content.split('[buildozer]')
+        app_sec = parts[0]
+        buildozer_sec = '[buildozer]' + parts[1] if len(parts) > 1 else ''
+
+        replacements = {
+            r'^[# ]*title\s*=.*': 'title = Sliding Puzzle Ultimate',
+            r'^[# ]*package\.name\s*=.*': 'package.name = puzzleslider',
+            r'^[# ]*package\.domain\s*=.*': 'package.domain = org.senu',
+            r'^[# ]*source\.include_exts\s*=.*': 'source.include_exts = py,png,jpg,kv,atlas',
+            r'^[# ]*version\s*=.*': 'version = 1.0',
+            r'^[# ]*requirements\s*=.*': 'requirements = python3,kivy',
+            r'^[# ]*orientation\s*=.*': 'orientation = portrait',
+            r'^[# ]*presplash\.filename\s*=.*': r'presplash.filename = %(source.dir)s/presplash.jpg',
+            r'^[# ]*icon\.filename\s*=.*': r'icon.filename = %(source.dir)s/icon.png',
+            r'^[# ]*android\.accept_sdk_license\s*=.*': 'android.accept_sdk_license = True',
+            r'^[# ]*fullscreen\s*=.*': 'fullscreen = 1'
+        }
+
+        for pattern, repl in replacements.items():
+            app_sec = re.sub(pattern, repl, app_sec, flags=re.MULTILINE)
 
         with open('buildozer.spec', 'w') as f:
-            config.write(f)
+            f.write(app_sec + buildozer_sec)
         "
 
     - name: Build Android App Bundle (AAB) with Buildozer
