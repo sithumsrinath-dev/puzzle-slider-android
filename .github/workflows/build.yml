@@ -1,90 +1,179 @@
 name: Build Puzzle Slider AAB
 
+
+
 on:
+
   push:
+
     branches: [ main ]
+
   pull_request:
+
     branches: [ main ]
+
   workflow_dispatch:
 
+
+
 jobs:
+
   build:
+
     runs-on: ubuntu-22.04
 
+
+
     steps:
+
     - name: Checkout Source Code
+
       uses: actions/checkout@v4
 
+
+
     - name: Set up Python 3.11
+
       uses: actions/setup-python@v5
+
       with:
+
         python-version: '3.11'
 
+
+
     - name: Set up Java 17
+
       uses: actions/setup-java@v4
+
       with:
+
         distribution: 'temurin'
+
         java-version: '17'
 
+
+
     - name: Install System Dependencies
+
       run: |
+
         sudo apt-get update
+
         sudo apt-get install -y \
+
           build-essential \
+
           ccache \
+
           git \
+
           libffi-dev \
+
           libssl-dev \
+
           libgtk-3-dev \
+
           zlib1g-dev \
+
           unzip \
+
           zip \
+
           autoconf \
+
           automake \
+
           libtool \
+
           libtool-bin \
+
           gettext \
+
           pkg-config \
+
           cmake \
+
           ninja-build \
+
           patch
 
+
+
     - name: Install Python Build Dependencies
+
       run: |
+
         python -m pip install --upgrade pip setuptools wheel
+
         python -m pip install --upgrade cython virtualenv buildozer kivy
 
+
+
     - name: Generate Valid Buildozer Spec
+
       run: |
+
         rm -f buildozer.spec
+
         buildozer init
-        sed -i 's/^[# ]*title =.*/title = Sliding Puzzle Ultimate/g' buildozer.spec
-        sed -i 's/^[# ]*package.name =.*/package.name = puzzleslider/g' buildozer.spec
-        sed -i 's/^[# ]*package.domain =.*/package.domain = org.senu/g' buildozer.spec
-        sed -i 's/^[# ]*source.include_exts =.*/source.include_exts = py,png,jpg,kv,atlas/g' buildozer.spec
-        sed -i 's/^[# ]*version =.*/version = 1.0/g' buildozer.spec
-        sed -i 's/^[# ]*requirements =.*/requirements = python3,kivy/g' buildozer.spec
-        sed -i 's/^[# ]*orientation =.*/orientation = portrait/g' buildozer.spec
-        sed -i 's/^[# ]*presplash.filename =.*/presplash.filename = %(source.dir)s\/presplash.jpg/g' buildozer.spec
-        sed -i 's/^[# ]*icon.filename =.*/icon.filename = %(source.dir)s\/icon.png/g' buildozer.spec
-        sed -i 's/^[# ]*android.accept_sdk_license =.*/android.accept_sdk_license = True/g' buildozer.spec
-        sed -i 's/^[# ]*fullscreen =.*/fullscreen = 1/g' buildozer.spec
+
+        sed -i 's/# title = My Application/title = Sliding Puzzle Game/g' buildozer.spec
+
+        sed -i 's/# package.name = myapp/package.name = puzzleslider/g' buildozer.spec
+
+        sed -i 's/# package.domain = org.example/package.domain = org.senu/g' buildozer.spec
+
+        sed -i 's/# source.include_exts = py,png,jpg,kv,atlas/source.include_exts = py,png,jpg,kv,atlas/g' buildozer.spec
+
+        sed -i 's/# version = 0.1/version = 1.0/g' buildozer.spec
+
+        sed -i 's/# requirements = python3,kivy/requirements = python3,kivy/g' buildozer.spec
+
+        sed -i 's/# orientation = portrait/orientation = portrait/g' buildozer.spec
+
+        sed -i 's/# presplash.filename = %(source.dir)s\/data\/presplash.png/presplash.filename = %(source.dir)s\/presplash.jpg/g' buildozer.spec
+
+        sed -i 's/# icon.filename = %(source.dir)s\/data\/icon.png/icon.filename = %(source.dir)s\/icon.png/g' buildozer.spec
+
+        sed -i 's/# android.accept_sdk_license = False/android.accept_sdk_license = True/g' buildozer.spec
+
+        sed -i 's/# fullscreen = 0/fullscreen = 1/g' buildozer.spec
+
+
 
     - name: Build Android App Bundle (AAB) with Buildozer
+
       run: |
+
         unset ANDROID_SDK_ROOT
+
         unset ANDROID_HOME
+
         unset ANDROID_NDK
+
         unset ANDROID_NDK_LATEST_HOME
+
         unset ANDROID_NDK_HOME
+
         unset ANDROID_NDK_ROOT
+
         
+
         export HOME=/home/runner
+
         export BUILDOZER_ALLOW_ORG_TEST_DOMAIN=1
+
         buildozer android release
 
+
+
     - name: Upload Build Artifacts
+
       uses: actions/upload-artifact@v4
+
       with:
+
         name: release-aab
+
         path: bin/*.aab
