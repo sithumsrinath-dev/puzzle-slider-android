@@ -54,21 +54,14 @@ jobs:
         python -m pip install --upgrade pip setuptools wheel
         python -m pip install --upgrade cython virtualenv buildozer kivy
 
-    - name: Setup Android SDK and Build-Tools Manually
+    - name: Setup Android SDK Command-line Tools Manually
       run: |
         ANDROID_HOME="/home/runner/.buildozer/android/platform/android-sdk"
         mkdir -p $ANDROID_HOME/cmdline-tools
-        
-        # Download and setup commandline-tools
         wget https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -O cmdline-tools.zip
         unzip -q cmdline-tools.zip -d temp_tools
         mv temp_tools/cmdline-tools $ANDROID_HOME/cmdline-tools/latest
         rm -rf cmdline-tools.zip temp_tools
-
-        # Accept licenses and install platform-tools and build-tools
-        export PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin
-        yes | sdkmanager --licenses
-        sdkmanager "platform-tools" "build-tools;33.0.2" "platforms;android-33"
 
     - name: Build Android App Bundle (AAB) with Buildozer
       run: |
