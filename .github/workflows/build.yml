@@ -58,17 +58,28 @@ jobs:
       run: |
         rm -f buildozer.spec
         buildozer init
-        sed -i 's/^[# ]*title =.*/title = Sliding Puzzle Ultimate/g' buildozer.spec
-        sed -i 's/^[# ]*package.name =.*/package.name = puzzleslider/g' buildozer.spec
-        sed -i 's/^[# ]*package.domain =.*/package.domain = org.senu/g' buildozer.spec
-        sed -i 's/^[# ]*source.include_exts =.*/source.include_exts = py,png,jpg,kv,atlas/g' buildozer.spec
-        sed -i 's/^[# ]*version =.*/version = 1.0/g' buildozer.spec
-        sed -i 's/^[# ]*requirements =.*/requirements = python3,kivy/g' buildozer.spec
-        sed -i 's/^[# ]*orientation =.*/orientation = portrait/g' buildozer.spec
-        sed -i 's/^[# ]*presplash.filename =.*/presplash.filename = %(source.dir)s\/presplash.jpg/g' buildozer.spec
-        sed -i 's/^[# ]*icon.filename =.*/icon.filename = %(source.dir)s\/icon.png/g' buildozer.spec
-        sed -i 's/^[# ]*android.accept_sdk_license =.*/android.accept_sdk_license = True/g' buildozer.spec
-        sed -i 's/^[# ]*fullscreen =.*/fullscreen = 1/g' buildozer.spec
+        python3 -c "
+        import configparser
+
+        config = configparser.ConfigParser(interpolation=None)
+        config.read('buildozer.spec')
+
+        if 'app' in config:
+            config['app']['title'] = 'Sliding Puzzle Ultimate'
+            config['app']['package.name'] = 'puzzleslider'
+            config['app']['package.domain'] = 'org.senu'
+            config['app']['source.include_exts'] = 'py,png,jpg,kv,atlas'
+            config['app']['version'] = '1.0'
+            config['app']['requirements'] = 'python3,kivy'
+            config['app']['orientation'] = 'portrait'
+            config['app']['presplash.filename'] = '%(source.dir)s/presplash.jpg'
+            config['app']['icon.filename'] = '%(source.dir)s/icon.png'
+            config['app']['android.accept_sdk_license'] = 'True'
+            config['app']['fullscreen'] = '1'
+
+        with open('buildozer.spec', 'w') as f:
+            config.write(f)
+        "
 
     - name: Build Android App Bundle (AAB) with Buildozer
       run: |
