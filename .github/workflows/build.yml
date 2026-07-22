@@ -83,7 +83,9 @@ jobs:
             r'^[# ]*android\.accept_sdk_license\s*=.*': 'android.accept_sdk_license = True',
             r'^[# ]*fullscreen\s*=.*': 'fullscreen = 0',
             r'^[# ]*android\.api\s*=.*': 'android.api = 34',
-            r'^[# ]*android\.minapi\s*=.*': 'android.minapi = 21'
+            r'^[# ]*android\.minapi\s*=.*': 'android.minapi = 21',
+            r'^[# ]*android\.archs\s*=.*': 'android.archs = arm64-v8a, armeabi-v7a',
+            r'^[# ]*android\.enable_androidx\s*=.*': 'android.enable_androidx = True'
         }
 
         for pattern, repl in replacements.items():
