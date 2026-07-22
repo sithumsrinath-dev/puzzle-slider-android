@@ -81,7 +81,9 @@ jobs:
             r'^[# ]*presplash\.filename\s*=.*': r'presplash.filename = %(source.dir)s/presplash.jpg',
             r'^[# ]*icon\.filename\s*=.*': r'icon.filename = %(source.dir)s/icon.png',
             r'^[# ]*android\.accept_sdk_license\s*=.*': 'android.accept_sdk_license = True',
-            r'^[# ]*fullscreen\s*=.*': 'fullscreen = 1'
+            r'^[# ]*fullscreen\s*=.*': 'fullscreen = 0',
+            r'^[# ]*android\.api\s*=.*': 'android.api = 34',
+            r'^[# ]*android\.minapi\s*=.*': 'android.minapi = 21'
         }
 
         for pattern, repl in replacements.items():
