@@ -1,5 +1,8 @@
 [app]
 
+# (str) Source code where the main.py live
+source.dir = .
+
 # (str) Title of your application
 title = Puzzle Slider
 
@@ -90,7 +93,10 @@ android.manifest.application_inject =
 #android.add_java_src =
 
 # (str) Gradle dependencies to add
-android.add_gradle_dependencies = 'com.google.android.gms:play-services-ads:22.6.0'
+android.add_gradle_dependencies = com.google.android.gms:play-services-ads:22.6.0
+
+# (list) Application meta-data to add (key=value)
+android.meta_data = com.google.android.gms.ads.APPLICATION_ID=ca-app-pub-5106431642894326~3643301881
 
 # (bool) Enable AndroidX support
 android.androidx = True
