@@ -54,50 +54,6 @@ jobs:
         python -m pip install --upgrade pip setuptools wheel
         python -m pip install --upgrade cython virtualenv buildozer kivy
 
-    - name: Generate Valid Buildozer Spec
-      run: |
-        rm -f buildozer.spec
-        buildozer init
-        
-        # Safely update buildozer.spec using Regex without breaking Kivy/Buildozer variables
-        python3 -c "
-        import re
-
-        with open('buildozer.spec', 'r') as f:
-            content = f.read()
-
-        parts = content.split('[buildozer]')
-        app_sec = parts[0]
-        buildozer_sec = '[buildozer]' + parts[1] if len(parts) > 1 else ''
-
-        replacements = {
-            r'^[# ]*title\s*=.*': 'title = Sliding Puzzle Ultimate',
-            r'^[# ]*package\.name\s*=.*': 'package.name = puzzleslider',
-            r'^[# ]*package\.domain\s*=.*': 'package.domain = org.senu',
-            r'^[# ]*source\.include_exts\s*=.*': 'source.include_exts = py,png,jpg,kv,atlas',
-            r'^[# ]*version\s*=.*': 'version = 1.0',
-            r'^[# ]*requirements\s*=.*': 'requirements = python3,kivy,kivmob,pyobjus',
-            r'^[# ]*orientation\s*=.*': 'orientation = portrait',
-            r'^[# ]*presplash\.filename\s*=.*': r'presplash.filename = %(source.dir)s/presplash.jpg',
-            r'^[# ]*icon\.filename\s*=.*': r'icon.filename = %(source.dir)s/icon.png',
-            r'^[# ]*android\.accept_sdk_license\s*=.*': 'android.accept_sdk_license = True',
-            r'^[# ]*fullscreen\s*=.*': 'fullscreen = 0',
-            r'^[# ]*android\.api\s*=.*': 'android.api = 34',
-            r'^[# ]*android\.minapi\s*=.*': 'android.minapi = 21',
-            r'^[# ]*android\.archs\s*=.*': 'android.archs = arm64-v8a, armeabi-v7a',
-            r'^[# ]*android\.enable_androidx\s*=.*': 'android.enable_androidx = True',
-            r'^[# ]*android\.permissions\s*=.*': 'android.permissions = INTERNET, ACCESS_NETWORK_STATE',
-            r'^[# ]*android\.gradle_dependencies\s*=.*': 'android.gradle_dependencies = com.google.android.gms:play-services-ads:22.6.0',
-            r'^[# ]*android\.meta_data\s*=.*': 'android.meta_data = com.google.android.gms.ads.APPLICATION_ID=ca-app-pub-5106431642894326~3643301881'
-        }
-
-        for pattern, repl in replacements.items():
-            app_sec = re.sub(pattern, repl, app_sec, flags=re.MULTILINE)
-
-        with open('buildozer.spec', 'w') as f:
-            f.write(app_sec + buildozer_sec)
-        "
-
     - name: Build Android App Bundle (AAB) with Buildozer
       run: |
         unset ANDROID_SDK_ROOT
