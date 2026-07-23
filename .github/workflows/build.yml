@@ -54,12 +54,46 @@ jobs:
         python -m pip install --upgrade pip setuptools wheel
         python -m pip install --upgrade cython virtualenv buildozer kivy
 
-    - name: Accept Android SDK Licenses
+    - name: Generate Valid Buildozer Spec
       run: |
-        mkdir -p ~/.buildozer/android/platform/android-sdk/licenses
-        echo -e "\n24333f8a637b3749d10737a45c087a8b65817a2d\n84831b9409646a918e30573bab4c9c91346d8abd\n504667f4c057e41f462f3bce61b610b2a067314f\ne98610190c27436ff777ed11d12965ab01674c41\n8651b04983b700d2238318260d3d3a088c3065d6\n7a027380f27f30159ec188bd0b00d65bf4552192\nd97507fc4911998680c1a14021f10a57a4577080" > ~/.buildozer/android/platform/android-sdk/licenses/android-sdk-license
-        echo -e "\n84831b9409646a918e30573bab4c9c91346d8abd" > ~/.buildozer/android/platform/android-sdk/licenses/android-sdk-preview-license
-        yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
+        rm -f buildozer.spec
+        buildozer init
+        
+        # Safely update buildozer.spec using Regex without breaking Kivy/Buildozer variables
+        python3 -c "
+        import re
+
+        with open('buildozer.spec', 'r') as f:
+            content = f.read()
+
+        parts = content.split('[buildozer]')
+        app_sec = parts[0]
+        buildozer_sec = '[buildozer]' + parts[1] if len(parts) > 1 else ''
+
+        replacements = {
+            r'^[# ]*title\s*=.*': 'title = Sliding Puzzle Ultimate',
+            r'^[# ]*package\.name\s*=.*': 'package.name = puzzleslider',
+            r'^[# ]*package\.domain\s*=.*': 'package.domain = org.senu',
+            r'^[# ]*source\.include_exts\s*=.*': 'source.include_exts = py,png,jpg,kv,atlas',
+            r'^[# ]*version\s*=.*': 'version = 1.0',
+            r'^[# ]*requirements\s*=.*': 'requirements = python3,kivy,kivmob,pyobjus,android',
+            r'^[# ]*orientation\s*=.*': 'orientation = portrait',
+            r'^[# ]*presplash\.filename\s*=.*': r'presplash.filename = %(source.dir)s/presplash.jpg',
+            r'^[# ]*icon\.filename\s*=.*': r'icon.filename = %(source.dir)s/icon.png',
+            r'^[# ]*android\.accept_sdk_license\s*=.*': 'android.accept_sdk_license = True',
+            r'^[# ]*fullscreen\s*=.*': 'fullscreen = 0',
+            r'^[# ]*android\.api\s*=.*': 'android.api = 34',
+            r'^[# ]*android\.minapi\s*=.*': 'android.minapi = 21',
+            r'^[# ]*android\.gradle_dependencies\s*=.*': 'android.gradle_dependencies = com.google.android.gms:play-services-ads:22.6.0',
+            r'^[# ]*android\.meta_data\s*=.*': 'android.meta_data = com.google.android.gms.ads.APPLICATION_ID=ca-app-pub-5106431642894326~3643301881'
+        }
+
+        for pattern, repl in replacements.items():
+            app_sec = re.sub(pattern, repl, app_sec, flags=re.MULTILINE)
+
+        with open('buildozer.spec', 'w') as f:
+            f.write(app_sec + buildozer_sec)
+        "
 
     - name: Build Android App Bundle (AAB) with Buildozer
       run: |
