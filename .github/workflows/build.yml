@@ -76,15 +76,19 @@ jobs:
             r'^[# ]*package\.domain\s*=.*': 'package.domain = org.senu',
             r'^[# ]*source\.include_exts\s*=.*': 'source.include_exts = py,png,jpg,kv,atlas',
             r'^[# ]*version\s*=.*': 'version = 1.0',
-            r'^[# ]*requirements\s*=.*': 'requirements = python3,kivy,kivmob,pyobjus,android',
+            r'^[# ]*requirements\s*=.*': 'requirements = python3,kivy,kivmob,android',
             r'^[# ]*orientation\s*=.*': 'orientation = portrait',
             r'^[# ]*presplash\.filename\s*=.*': r'presplash.filename = %(source.dir)s/presplash.jpg',
             r'^[# ]*icon\.filename\s*=.*': r'icon.filename = %(source.dir)s/icon.png',
             r'^[# ]*android\.accept_sdk_license\s*=.*': 'android.accept_sdk_license = True',
             r'^[# ]*fullscreen\s*=.*': 'fullscreen = 0',
-            r'^[# ]*android\.api\s*=.*': 'android.api = 34',
+            r'^[# ]*android\.api\s*=.*': 'android.api = 35',
             r'^[# ]*android\.minapi\s*=.*': 'android.minapi = 21',
-            r'^[# ]*android\.gradle_dependencies\s*=.*': 'android.gradle_dependencies = com.google.android.gms:play-services-ads:22.6.0',
+            r'^[# ]*android\.sdk\s*=.*': 'android.sdk = 35',
+            r'^[# ]*android\.ndk\s*=.*': 'android.ndk = 25b',
+            r'^[# ]*android\.archs\s*=.*': 'android.archs = arm64-v8a, armeabi-v7a, x86, x86_64',
+            r'^[# ]*p4a\.bootstrap\s*=.*': 'p4a.bootstrap = sdl2',
+            r'^[# ]*android\.gradle_dependencies\s*=.*': 'android.add_gradle_dependencies = com.google.android.gms:play-services-ads:22.6.0',
             r'^[# ]*android\.meta_data\s*=.*': 'android.meta_data = com.google.android.gms.ads.APPLICATION_ID=ca-app-pub-5106431642894326~3643301881'
         }
 
