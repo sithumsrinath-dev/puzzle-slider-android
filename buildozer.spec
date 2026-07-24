@@ -32,10 +32,9 @@ version = 1.0
 
 # (list) Application requirements
 # comma separated e.g. requirements = sqlite3,kivy
-requirements = python3,kivy,kivmob,pyobjus,android
+requirements = python3,kivy,kivmob,android
 
 # (list) Custom source folders for python modules
-anzu = source.include_exts path
 #source.dirs =
 
 # (str) Presplash of the application
@@ -54,13 +53,13 @@ orientation = portrait
 # OSX Specific
 # Author
 # (int) Target Android API, should be as high as possible.  
-android.api = 34  
+android.api = 35  
 
 # (int) Minimum API your APK will support.  
 android.minapi = 21  
 
 # (int) Android SDK version to use  
-android.sdk = 34  
+android.sdk = 35  
 
 # (str) Android NDK version to use  
 android.ndk = 25b  
@@ -120,7 +119,7 @@ android.androidx = True
 #android.copy_libs = 1
 
 # (str) The Android arch to build for, choices: armeabi-v7a, arm64-v8a, x86, x86_64
-android.archs = arm64-v8a, armeabi-v7a
+android.archs = arm64-v8a, armeabi-v7a, x86, x86_64
 
 # (bool) Enables Android Lint inspection
 #android.lint = False
@@ -133,6 +132,10 @@ android.archs = arm64-v8a, armeabi-v7a
 
 # (str) Ouput format, either apk or aar or aab
 android.output_format = aab
+
+fullscreen = 0
+p4a.bootstrap = sdl2
+android.allow_backup = True
 
 [buildozer]
 
