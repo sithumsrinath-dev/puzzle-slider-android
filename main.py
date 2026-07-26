@@ -55,6 +55,7 @@ class SlidingPuzzleGame(BoxLayout):
         app = App.get_running_app()
         data_dir = app.user_data_dir if app else os.path.dirname(__file__)
         file_path = os.path.join(data_dir, 'game_secure_state.json')
+
         try:
             with open(file_path, 'r') as f:
                 encrypted_string = f.read()
@@ -107,13 +108,16 @@ class SlidingPuzzleGame(BoxLayout):
             prev_btn.bg_rect = RoundedRectangle(radius=[12])
             Color(1, 1, 1, 0.18)
             prev_btn.bg_gloss = RoundedRectangle(radius=[10])
+
         self.level_container = BoxLayout(orientation='horizontal', padding=[5, 0, 5, 0])
         with self.level_container.canvas.before:
             Color(0.2, 0.75, 0.95, 1) # Premium Sky Blue / Cool Cyan Family
             self.level_container.bg_rect = RoundedRectangle(radius=[10])
+
         self.level_label = Label(text="", font_size='16sp', bold=True, color=(0, 0, 0, 1), halign='center', valign='middle')
         self.level_label.bind(size=self.level_label.setter('text_size'))
         self.level_container.add_widget(self.level_label)
+
         next_btn = Button(text=">", bold=True, font_size='20sp', background_normal="", background_color=(0, 0, 0, 0), color=(0, 0, 0, 1))
         with next_btn.canvas.before:
             Color(1, 1, 1, 1) # Pure White Button Base
@@ -126,8 +130,10 @@ class SlidingPuzzleGame(BoxLayout):
             prev_btn.bg_rect.size = prev_btn.size
             prev_btn.bg_gloss.pos = (prev_btn.x + 2, prev_btn.y + prev_btn.height * 0.5)
             prev_btn.bg_gloss.size = (prev_btn.width - 4, prev_btn.height * 0.4)
+
             self.level_container.bg_rect.pos = self.level_container.pos
             self.level_container.bg_rect.size = self.level_container.size
+
             next_btn.bg_rect.pos = next_btn.pos
             next_btn.bg_rect.size = next_btn.size
             next_btn.bg_gloss.pos = (next_btn.x + 2, next_btn.y + next_btn.height * 0.5)
@@ -149,9 +155,11 @@ class SlidingPuzzleGame(BoxLayout):
         with timer_container.canvas.before:
             Color(0.05, 0.1, 0.2, 0.4) # Subtle Dark Glass Sub-panel
             timer_container.bg_rect = RoundedRectangle(radius=[10])
+
         def _update_timer_container(instance, value):
             timer_container.bg_rect.pos = instance.pos
             timer_container.bg_rect.size = instance.size
+
         timer_container.bind(pos=_update_timer_container, size=_update_timer_container)
         self.timer_label = Label(text="", font_size='16sp', bold=True, color=(1, 0.2, 0.5, 1), halign='center')
         timer_container.add_widget(self.timer_label)
@@ -161,9 +169,11 @@ class SlidingPuzzleGame(BoxLayout):
         with wins_container.canvas.before:
             Color(0.05, 0.1, 0.2, 0.4)
             wins_container.bg_rect = RoundedRectangle(radius=[10])
+
         def _update_wins_container(instance, value):
             wins_container.bg_rect.pos = instance.pos
             wins_container.bg_rect.size = instance.size
+
         wins_container.bind(pos=_update_wins_container, size=_update_wins_container)
         self.wins_label = Label(text=f"Wins: {self.total_wins}", font_size='16sp', bold=True, color=(0, 1, 0, 1), halign='center')
         wins_container.add_widget(self.wins_label)
@@ -176,15 +186,18 @@ class SlidingPuzzleGame(BoxLayout):
 
         # Punishment Dashboard with Glassmorphism & Neon Cyan Accents
         self.punish_layout = BoxLayout(orientation='horizontal', size_hint_y=0.08, padding=[10, 5, 10, 5], spacing=10)
+
         # Adding a semi-transparent glass background to the container
         with self.punish_layout.canvas.before:
             Color(0, 0.4, 0.5, 0.15) # Cyan family light glass tint
             self.punish_bg = Rectangle(size=self.punish_layout.size, pos=self.punish_layout.pos)
             Color(0, 0.9, 1, 0.3) # Neon border line
             self.punish_line = Line(rectangle=(self.punish_layout.x, self.punish_layout.y, self.punish_layout.width, self.punish_layout.height), width=1)
+
         self.punish_layout.bind(pos=self._update_punish_bounds, size=self._update_punish_bounds)
 
         self.punish_label = Label(text=f"Punishment Box: {self.punishment_pool} Seconds", font_size='14sp', bold=True, color=(1, 0.3, 0, 1))
+
         # Fixed Button: Styled with bold black text, glass finish, and auto-wrapping text to fit inside perfectly
         self.ad_button = Button(text="Watch\nPunishment Ad",
                                 size_hint_x=0.4,
@@ -196,6 +209,7 @@ class SlidingPuzzleGame(BoxLayout):
                                 valign='middle')
         self.ad_button.bind(size=self.ad_button.setter('text_size')) # Auto wrapping inside button boundaries
         self.ad_button.bind(on_press=self.trigger_punishment_ad)
+
         # Drawing Neon Glass border overlay for the button
         with self.ad_button.canvas.before:
             Color(0.02, 0.08, 0.12, 1) # Dark Cyan/Blue Shadow
@@ -207,6 +221,7 @@ class SlidingPuzzleGame(BoxLayout):
         with self.ad_button.canvas.after:
             Color(0, 0.9, 1, 0.7) # Intensely vivid Cyan line border
             self.ad_button.ad_btn_line = Line(rectangle=(self.ad_button.x, self.ad_button.y, self.ad_button.width, self.ad_button.height), width=1.2)
+
         self.ad_button.bind(pos=self._update_ad_btn_bounds, size=self._update_ad_btn_bounds)
 
         self.punish_layout.add_widget(self.punish_label)
@@ -221,6 +236,7 @@ class SlidingPuzzleGame(BoxLayout):
 
         # Core Controls Panel
         self.control_layout = BoxLayout(orientation='horizontal', size_hint_y=0.1, padding=10, spacing=10)
+
         self.reset_btn = Button(text="RESET", font_size='16sp', bold=True, background_normal="", background_color=(0, 0, 0, 0), color=(1, 1, 1, 1))
         with self.reset_btn.canvas.before:
             Color(0.02, 0.05, 0.1, 0.8)
@@ -229,6 +245,7 @@ class SlidingPuzzleGame(BoxLayout):
             self.reset_btn.bg_rect = RoundedRectangle(size=self.reset_btn.size, pos=self.reset_btn.pos, radius=[15])
             Color(1, 1, 1, 0.15) # Top Light White Glossy Layer
             self.reset_btn.bg_gloss = RoundedRectangle(size=(self.reset_btn.width - 6, self.reset_btn.height * 0.4), pos=(self.reset_btn.x + 3, self.reset_btn.y + self.reset_btn.height * 0.5), radius=[10])
+
         def _update_reset_btn_bounds(instance, value):
             instance.bg_shadow.pos = (instance.x, instance.y - 4)
             instance.bg_shadow.size = instance.size
@@ -236,6 +253,7 @@ class SlidingPuzzleGame(BoxLayout):
             instance.bg_rect.size = instance.size
             instance.bg_gloss.pos = (instance.x + 3, instance.y + instance.height * 0.5)
             instance.bg_gloss.size = (instance.width - 6, instance.height * 0.4)
+
         self.reset_btn.bind(pos=_update_reset_btn_bounds, size=_update_reset_btn_bounds)
         self.reset_btn.bind(on_press=lambda x: self.initialize_level(reset_attempts=False))
 
@@ -247,6 +265,7 @@ class SlidingPuzzleGame(BoxLayout):
             self.undo_btn.bg_rect = RoundedRectangle(size=self.undo_btn.size, pos=self.undo_btn.pos, radius=[15])
             Color(1, 1, 1, 0.15) # Top Light White Glossy Layer
             self.undo_btn.bg_gloss = RoundedRectangle(size=(self.undo_btn.width - 6, self.undo_btn.height * 0.4), pos=(self.undo_btn.x + 3, self.undo_btn.y + self.undo_btn.height * 0.5), radius=[10])
+
         def _update_undo_btn_bounds(instance, value):
             instance.bg_shadow.pos = (instance.x, instance.y - 4)
             instance.bg_shadow.size = instance.size
@@ -254,6 +273,7 @@ class SlidingPuzzleGame(BoxLayout):
             instance.bg_rect.size = instance.size
             instance.bg_gloss.pos = (instance.x + 3, instance.y + instance.height * 0.5)
             instance.bg_gloss.size = (instance.width - 6, instance.height * 0.4)
+
         self.undo_btn.bind(pos=_update_undo_btn_bounds, size=_update_undo_btn_bounds)
         self.undo_btn.bind(on_press=self.perform_undo)
 
@@ -302,6 +322,7 @@ class SlidingPuzzleGame(BoxLayout):
         self.lock_frame = None
         if reset_attempts:
             self.failed_attempts = 0
+        Clock.unschedule(self.update_timer)
         if self.timer_trigger:
             Clock.unschedule(self.timer_trigger)
             self.timer_trigger = None
@@ -351,12 +372,10 @@ class SlidingPuzzleGame(BoxLayout):
     def generate_solvable_puzzle(self):
         total_tiles = self.grid_size * self.grid_size
         self.tiles = list(range(1, total_tiles)) + [0]
-
+        
         # Configurable shuffling intensity scaling linearly with current level difficulty
-        shuffle_steps = self.grid_size * 50 if not self.challenge_mode else 500
-        if not self.challenge_mode and self.grid_size == 3:
-            shuffle_steps = 10 * self.current_level
-
+        shuffle_steps = self.grid_size * self.grid_size * 20
+        
         # Physical structural shifting simulation to assure computational solvability
         blank = total_tiles - 1
         for _ in range(shuffle_steps):
@@ -370,7 +389,7 @@ class SlidingPuzzleGame(BoxLayout):
             move = random.choice(valid_moves)
             self.tiles[blank], self.tiles[move] = self.tiles[move], self.tiles[blank]
             blank = move
-
+            
         self.blank_index = self.tiles.index(0)
 
     def render_grid(self):
@@ -449,6 +468,7 @@ class SlidingPuzzleGame(BoxLayout):
             self.timer_label.text = f"Time: {self.time_left}s"
 
     def handle_level_failure(self):
+        Clock.unschedule(self.update_timer)
         if self.timer_trigger:
             Clock.unschedule(self.timer_trigger)
             self.timer_trigger = None
@@ -486,18 +506,14 @@ class SlidingPuzzleGame(BoxLayout):
 
             def on_skip(instance):
                 popup.dismiss()
-                self.punishment_pool = 0
-                self.failed_attempts = 0
-                self.is_skipping_via_ad = True
-                self.countdown_pool = 10
                 self.ad_button.disabled = True
-                
-                # Show AdMob Rewarded Ad if available
-                if self.ads and self.ads.is_rewarded_video_loaded():
-                    self.ads.show_rewarded_video()
-                
-                Clock.unschedule(self.process_ad_stream)
-                Clock.schedule_interval(self.process_ad_stream, 1.0)
+                if hasattr(self, 'lock_ad_button') and self.lock_ad_button is not None:
+                    self.lock_ad_button.disabled = True
+                UrlRequest("https://www.google.com",
+                           on_success=lambda req, res: self._start_skip_ad(),
+                           on_error=self.network_failed,
+                           on_failure=self.network_failed,
+                           timeout=2)
 
             def on_cancel(instance):
                 popup.dismiss()
@@ -522,15 +538,29 @@ class SlidingPuzzleGame(BoxLayout):
             Clock.schedule_once(lambda dt: popup.dismiss(), 1.5)
             Clock.schedule_once(lambda dt: self.initialize_level(reset_attempts=False), 1.6)
 
+    def _start_skip_ad(self):
+        self.punishment_pool = 0
+        self.failed_attempts = 0
+        self.is_skipping_via_ad = True
+        self.countdown_pool = 10
+        self.ad_button.disabled = True
+        
+        # Show AdMob Rewarded Ad if available
+        if self.ads and self.ads.is_rewarded_video_loaded():
+            self.ads.show_rewarded_video()
+            
+        Clock.unschedule(self.process_ad_stream)
+        Clock.schedule_interval(self.process_ad_stream, 1.0)
+
     def check_win_condition(self):
         total_elements = self.grid_size * self.grid_size
         target = list(range(1, total_elements)) + [0]
         if secure_verify(json.dumps(self.tiles), json.dumps(target)):
             self.game_active = False
+            Clock.unschedule(self.update_timer)
             if self.timer_trigger:
                 Clock.unschedule(self.timer_trigger)
                 self.timer_trigger = None
-
             # Enhanced Official Dark Neon Glass Alert Dialog Architecture
             popup_layout = BoxLayout(orientation='vertical', padding=20)
             lbl = Label(text="== YOU WIN!\n==", font_size='24sp', bold=True, color=(0, 1, 0, 1), halign='center')
@@ -547,28 +577,26 @@ class SlidingPuzzleGame(BoxLayout):
             Clock.schedule_once(lambda dt: self.transition_next_step(), 1.6)
 
     def transition_next_step(self):
+        Clock.unschedule(self.update_timer)
         if self.timer_trigger:
             Clock.unschedule(self.timer_trigger)
             self.timer_trigger = None
         if self.challenge_mode:
             if self.move_count < self.high_score or self.high_score == 0:
                 self.high_score = self.move_count
-            self.initialize_level(reset_attempts=True)
+            Clock.schedule_once(lambda dt: self.initialize_level(reset_attempts=True), 0.2)
             return
-
         if self.current_level == 100:
             self.activate_grand_master_mode()
-
+            return
         if self.punishment_pool > 0:
             self.verify_network_and_lock()
             return
-
         if self.current_level == self.max_unlocked_level:
             self.current_level += 1
             self.max_unlocked_level = self.current_level
         else:
             self.current_level = self.max_unlocked_level
-
         self.total_wins = self.current_level - 1
         self.wins_label.text = f"Wins: {self.total_wins}"
         self.save_game_state()
@@ -578,7 +606,7 @@ class SlidingPuzzleGame(BoxLayout):
         if self.current_level in milestones and self.punishment_pool > 0:
             self.verify_network_and_lock()
         else:
-            self.initialize_level(reset_attempts=True)
+            Clock.schedule_once(lambda dt: self.initialize_level(reset_attempts=True), 0.2)
 
     def verify_network_and_lock(self):
         self.ad_button.disabled = True
@@ -591,10 +619,8 @@ class SlidingPuzzleGame(BoxLayout):
         self.ad_button.disabled = False
         if self.lock_ad_button is not None:
             self.lock_ad_button.disabled = False
-
         if self.lock_frame is not None:
             return
-
         self.puzzle_grid.clear_widgets()
         self.game_active = False
         self.level_label.text = "LOCKED - AD REQUIRED"
@@ -663,18 +689,25 @@ class SlidingPuzzleGame(BoxLayout):
         self.lock_frame.add_widget(msg_lbl)
         self.lock_frame.add_widget(status_lbl)
         self.lock_frame.add_widget(self.lock_ad_button)
+
         self.puzzle_grid.add_widget(self.lock_frame)
 
     def network_failed(self, request, error):
         self.internet_available = False
-        self.alert_label = Label(text="Connection Error: Punishment Ad cannot load...",
-                                 color=(1, 0, 0, 1),
-                                 bold=True,
-                                 font_size='14sp',
-                                 size_hint_y=None,
-                                 height=30)
-        self.add_widget(self.alert_label)
-        Clock.schedule_once(self.clear_alert_label, 2)
+        popup_layout = BoxLayout(orientation='vertical', padding=20)
+        lbl = Label(text="Connection Error: Internet connection required to watch Ad", 
+                    font_size='14sp', bold=True, color=(1, 0.2, 0.2, 1), halign='center', valign='middle')
+        lbl.bind(size=lbl.setter('text_size'))
+        popup_layout.add_widget(lbl)
+        
+        popup = Popup(title='NETWORK ERROR', content=popup_layout, size_hint=(0.8, 0.3), auto_dismiss=False)
+        popup.title_align = 'center'
+        popup.title_size = '16sp'
+        popup.title_color = [1, 0.2, 0.2, 1]
+        popup.background_color = [0.05, 0.08, 0.15, 0.95]
+        popup.open()
+        
+        Clock.schedule_once(lambda dt: popup.dismiss(), 2)
 
     def clear_alert_label(self, dt):
         if hasattr(self, 'alert_label') and self.alert_label.parent:
@@ -716,7 +749,7 @@ class SlidingPuzzleGame(BoxLayout):
             if hasattr(self, 'lock_ad_button') and self.lock_ad_button is not None:
                 self.lock_ad_button.text = "WATCH AD TO UNLOCK LEVEL"
                 self.lock_ad_button.disabled = False
-            
+                
             if self.is_skipping_via_ad:
                 self.is_skipping_via_ad = False
                 self.save_game_state()
@@ -741,7 +774,6 @@ class SlidingPuzzleGame(BoxLayout):
         self.total_wins = 100
         self.wins_label.text = f"Wins: {self.total_wins}"
         self.save_game_state()
-
         # Enhanced Official Dark Neon Glass Alert Dialog Architecture
         popup_layout = BoxLayout(orientation='vertical', padding=20)
         lbl = Label(text="👑 GRAND MASTER UNLOCKED:\nTHE TIME CHALLENGE!\n👑", font_size='24sp', bold=True, color=(1, 0.84, 0, 1), halign='center')
