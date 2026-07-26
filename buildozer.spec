@@ -53,16 +53,16 @@ orientation = portrait
 # OSX Specific
 # Author
 # (int) Target Android API, should be as high as possible.  
-android.api = 35  
+android.api = 34
 
 # (int) Minimum API your APK will support.  
-android.minapi = 21  
+android.minapi = 21
 
 # (int) Android SDK version to use  
-android.sdk = 35  
+android.sdk = 34
 
 # (str) Android NDK version to use  
-android.ndk = 25b  
+android.ndk = 25b
 
 # (int) Android NDK API to use. This is the minimum API supported by your app.
 #android.ndk_api = 21
@@ -95,7 +95,7 @@ android.manifest.application_inject =
 android.add_gradle_dependencies = com.google.android.gms:play-services-ads:22.6.0
 
 # (list) Application meta-data to add (key=value)
-android.meta_data = com.google.android.gms.ads.APPLICATION_ID=ca-app-pub-5106431642894326~3643301881
+android.manifest.application_meta_data = com.google.android.gms.ads.APPLICATION_ID=ca-app-pub-5106431642894326~3643301881
 
 # (bool) Enable AndroidX support
 android.androidx = True
@@ -119,7 +119,7 @@ android.androidx = True
 #android.copy_libs = 1
 
 # (str) The Android arch to build for, choices: armeabi-v7a, arm64-v8a, x86, x86_64
-android.archs = arm64-v8a, armeabi-v7a, x86, x86_64
+android.archs = arm64-v8a, armeabi-v7a
 
 # (bool) Enables Android Lint inspection
 #android.lint = False
