@@ -71,7 +71,7 @@ jobs:
         buildozer_sec = '[buildozer]' + parts[1] if len(parts) > 1 else ''
 
         replacements = {
-            r'^[# ]*title\s*=.*': 'title = Sliding Puzzle Ultimate',
+            r'^[# ]*title\s*=.*': 'title = Puzzle Slider',
             r'^[# ]*package\.name\s*=.*': 'package.name = puzzleslider',
             r'^[# ]*package\.domain\s*=.*': 'package.domain = org.senu',
             r'^[# ]*source\.include_exts\s*=.*': 'source.include_exts = py,png,jpg,kv,atlas',
@@ -82,14 +82,14 @@ jobs:
             r'^[# ]*icon\.filename\s*=.*': r'icon.filename = %(source.dir)s/icon.png',
             r'^[# ]*android\.accept_sdk_license\s*=.*': 'android.accept_sdk_license = True',
             r'^[# ]*fullscreen\s*=.*': 'fullscreen = 0',
-            r'^[# ]*android\.api\s*=.*': 'android.api = 35',
+            r'^[# ]*android\.api\s*=.*': 'android.api = 34',
             r'^[# ]*android\.minapi\s*=.*': 'android.minapi = 21',
-            r'^[# ]*android\.sdk\s*=.*': 'android.sdk = 35',
+            r'^[# ]*android\.sdk\s*=.*': 'android.sdk = 34',
             r'^[# ]*android\.ndk\s*=.*': 'android.ndk = 25b',
-            r'^[# ]*android\.archs\s*=.*': 'android.archs = arm64-v8a, armeabi-v7a, x86, x86_64',
+            r'^[# ]*android\.archs\s*=.*': 'android.archs = arm64-v8a, armeabi-v7a',
             r'^[# ]*p4a\.bootstrap\s*=.*': 'p4a.bootstrap = sdl2',
-            r'^[# ]*android\.gradle_dependencies\s*=.*': 'android.add_gradle_dependencies = com.google.android.gms:play-services-ads:22.6.0',
-            r'^[# ]*android\.meta_data\s*=.*': 'android.meta_data = com.google.android.gms.ads.APPLICATION_ID=ca-app-pub-5106431642894326~3643301881'
+            r'^[# ]*android\.add_gradle_dependencies\s*=.*': 'android.add_gradle_dependencies = com.google.android.gms:play-services-ads:22.6.0',
+            r'^[# ]*android\.meta_data\s*=.*': 'android.manifest.application_meta_data = com.google.android.gms.ads.APPLICATION_ID=ca-app-pub-5106431642894326~3643301881'
         }
 
         for pattern, repl in replacements.items():
