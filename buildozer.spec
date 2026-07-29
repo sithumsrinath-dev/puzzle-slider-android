@@ -4,7 +4,7 @@
 source.dir = .
 
 # (str) Title of your application
-title = Puzzle Slider
+title = Ultimate Sliding Puzzle
 
 # (str) Package name
 package.name = puzzleslider
