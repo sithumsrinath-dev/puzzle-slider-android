@@ -41,7 +41,6 @@ class SlidingPuzzleGame(BoxLayout):
         # Add state flags for debounce and ad status
         self.is_processing_click = False
         self.ad_failed_fallback = False
-
         # AdMob Initialization
         self.ads = None
         if KIVMOB_AVAILABLE and platform == 'android':
@@ -165,7 +164,7 @@ class SlidingPuzzleGame(BoxLayout):
             timer_container.bg_rect.pos = instance.pos
             timer_container.bg_rect.size = instance.size
         timer_container.bind(pos=_update_timer_container, size=_update_timer_container)
-
+        
         self.timer_label = Label(text="", font_size='16sp', bold=True, color=(1, 0.2, 0.5, 1), halign='center')
         timer_container.add_widget(self.timer_label)
 
@@ -178,7 +177,7 @@ class SlidingPuzzleGame(BoxLayout):
             wins_container.bg_rect.pos = instance.pos
             wins_container.bg_rect.size = instance.size
         wins_container.bind(pos=_update_wins_container, size=_update_wins_container)
-
+        
         self.wins_label = Label(text=f"Wins: {self.total_wins}", font_size='16sp', bold=True, color=(0, 1, 0, 1), halign='center')
         wins_container.add_widget(self.wins_label)
 
@@ -225,6 +224,7 @@ class SlidingPuzzleGame(BoxLayout):
         with self.ad_button.canvas.after:
             Color(0, 0.9, 1, 0.7) # Intensely vivid Cyan line border
             self.ad_button.ad_btn_line = Line(rectangle=(self.ad_button.x, self.ad_button.y, self.ad_button.width, self.ad_button.height), width=1.2)
+
         self.ad_button.bind(pos=self._update_ad_btn_bounds, size=self._update_ad_btn_bounds)
 
         self.punish_layout.add_widget(self.punish_label)
@@ -248,6 +248,7 @@ class SlidingPuzzleGame(BoxLayout):
             self.reset_btn.bg_rect = RoundedRectangle(size=self.reset_btn.size, pos=self.reset_btn.pos, radius=[15])
             Color(1, 1, 1, 0.15) # Top Light White Glossy Layer
             self.reset_btn.bg_gloss = RoundedRectangle(size=(self.reset_btn.width - 6, self.reset_btn.height * 0.4), pos=(self.reset_btn.x + 3, self.reset_btn.y + self.reset_btn.height * 0.5), radius=[10])
+
         def _update_reset_btn_bounds(instance, value):
             instance.bg_shadow.pos = (instance.x, instance.y - 4)
             instance.bg_shadow.size = instance.size
@@ -255,6 +256,7 @@ class SlidingPuzzleGame(BoxLayout):
             instance.bg_rect.size = instance.size
             instance.bg_gloss.pos = (instance.x + 3, instance.y + instance.height * 0.5)
             instance.bg_gloss.size = (instance.width - 6, instance.height * 0.4)
+        
         self.reset_btn.bind(pos=_update_reset_btn_bounds, size=_update_reset_btn_bounds)
         self.reset_btn.bind(on_press=lambda x: self.initialize_level(reset_attempts=False))
 
@@ -266,6 +268,7 @@ class SlidingPuzzleGame(BoxLayout):
             self.undo_btn.bg_rect = RoundedRectangle(size=self.undo_btn.size, pos=self.undo_btn.pos, radius=[15])
             Color(1, 1, 1, 0.15) # Top Light White Glossy Layer
             self.undo_btn.bg_gloss = RoundedRectangle(size=(self.undo_btn.width - 6, self.undo_btn.height * 0.4), pos=(self.undo_btn.x + 3, self.undo_btn.y + self.undo_btn.height * 0.5), radius=[10])
+
         def _update_undo_btn_bounds(instance, value):
             instance.bg_shadow.pos = (instance.x, instance.y - 4)
             instance.bg_shadow.size = instance.size
@@ -273,6 +276,7 @@ class SlidingPuzzleGame(BoxLayout):
             instance.bg_rect.size = instance.size
             instance.bg_gloss.pos = (instance.x + 3, instance.y + instance.height * 0.5)
             instance.bg_gloss.size = (instance.width - 6, instance.height * 0.4)
+        
         self.undo_btn.bind(pos=_update_undo_btn_bounds, size=_update_undo_btn_bounds)
         self.undo_btn.bind(on_press=self.perform_undo)
 
@@ -325,6 +329,7 @@ class SlidingPuzzleGame(BoxLayout):
         if self.timer_trigger:
             Clock.unschedule(self.timer_trigger)
             self.timer_trigger = None
+
         self.history.clear()
         self.move_count = 0
 
@@ -557,8 +562,7 @@ class SlidingPuzzleGame(BoxLayout):
                     ad_shown = True
             except Exception as e:
                 print(f"AdMob Rewarded Show Exception: {e}")
-        
-        Clock.unschedule(self.process_ad_stream)
+                Clock.unschedule(self.process_ad_stream)
         Clock.schedule_interval(self.process_ad_stream, 1.0)
 
     def check_win_condition(self):
@@ -570,7 +574,7 @@ class SlidingPuzzleGame(BoxLayout):
             if self.timer_trigger:
                 Clock.unschedule(self.timer_trigger)
                 self.timer_trigger = None
-
+            
             # Enhanced Official Dark Neon Glass Alert Dialog Architecture
             popup_layout = BoxLayout(orientation='vertical', padding=20)
             lbl = Label(text="== YOU WIN!\n==", font_size='24sp', bold=True, color=(0, 1, 0, 1), halign='center')
@@ -630,15 +634,94 @@ class SlidingPuzzleGame(BoxLayout):
                     on_failure=self.network_failed,
                     timeout=8)
 
-    def _on_network_check_success(self, request, result):
-        self.internet_available = True
+    def _dismiss_active_popups(self):
+        """[Bug 2 & 5 Fix] Dismisses all active popups safely to prevent ghost popups and stacking."""
+        if hasattr(self, 'net_popup') and self.net_popup:
+            try:
+                self.net_popup.dismiss()
+            except Exception:
+                pass
+            self.net_popup = None
+        if hasattr(self, 'current_popup') and self.current_popup:
+            try:
+                self.current_popup.dismiss()
+            except Exception:
+                pass
+            self.current_popup = None
+
+    def network_failed(self, request, error):
+        """[Bug 1, 2, 3 & 5 Fix] Handles network failure without button freeze or popup stacking."""
+        # [Bug 1 Fix] Release click lock securely
+        self.is_processing_click = False
+        self.internet_available = False
+        
+        # [Bug 3 Fix] Safely pause/unschedule ad stream timer during network failures
+        if hasattr(self, 'ad_timer_event') and self.ad_timer_event:
+            Clock.unschedule(self.ad_timer_event)
+            self.ad_timer_event = None
+        Clock.unschedule(self.process_ad_stream)
+
+        # Re-enable UI trigger buttons
         self.ad_button.disabled = False
         if hasattr(self, 'lock_ad_button') and self.lock_ad_button is not None:
             self.lock_ad_button.disabled = False
+
+        # [Bug 2 Fix] Dismiss existing ghost popups before opening a new one
+        self._dismiss_active_popups()
+
+        popup_layout = BoxLayout(orientation='vertical', padding=20, spacing=15)
+        lbl = Label(text="Connection Error / Weak Signal!\nPlease check Mobile Data / Wi-Fi\nand tap Retry.", 
+                    font_size='14sp', bold=True, color=(1, 0.2, 0.2, 1), halign='center', valign='middle')
+        lbl.bind(size=lbl.setter('text_size'))
+        popup_layout.add_widget(lbl)
+
+        ok_btn = Button(text="RETRY", bold=True, size_hint=(0.4, 0.3), pos_hint={'center_x': 0.5}, background_color=(0, 0.8, 1, 1))
+        popup_layout.add_widget(ok_btn)
+
+        # [Bug 5 Fix] Bind to self.net_popup for reference tracking and auto-dismissal
+        self.net_popup = Popup(title='NETWORK NOTICE', content=popup_layout, size_hint=(0.85, 0.4), auto_dismiss=False)
+        self.net_popup.title_align = 'center'
+        self.net_popup.title_size = '16sp'
+        self.net_popup.title_color = [1, 0.2, 0.2, 1]
+        self.net_popup.background_color = [0.05, 0.08, 0.15, 0.95]
+
+        def on_ok(instance):
+            if self.is_processing_click:
+                return
+            self.is_processing_click = True
+            # Dismiss popup immediately on retry tap
+            self._dismiss_active_popups()
+            Clock.schedule_once(lambda dt: self.verify_network_retry(), 0.3)
+
+        ok_btn.bind(on_press=on_ok)
+        self.net_popup.open()
+
+    def verify_network_retry(self):
+        """[Bug 1 & 8 Fix] Performs network retry with GC protection and safe click state release."""
+        self.is_processing_click = False
+        # [Bug 8 Fix] Assign UrlRequest to self.active_net_request to prevent Python GC from killing request
+        self.active_net_request = UrlRequest("https://clients3.google.com/generate_204",
+                   on_success=self._on_network_check_success,
+                   on_error=self.network_failed,
+                   on_failure=self.network_failed,
+                   on_redirect=self._on_network_check_success,
+                   timeout=10)
+
+    def _on_network_check_success(self, request, result):
+        """[Bug 4 & 5 Fix] Network success handler with explicit popup dismiss and milestone loop fix."""
+        self.internet_available = True
+        self.is_processing_click = False
         
+        # [Bug 5 Fix] Auto dismiss network failure popups on success
+        self._dismiss_active_popups()
+
+        self.ad_button.disabled = False
+        if hasattr(self, 'lock_ad_button') and self.lock_ad_button is not None:
+            self.lock_ad_button.disabled = False
+
+        # [Bug 4 Fix] Safely resolve scope-bound pending action without infinite milestone loop
         action = self.pending_action
         self.pending_action = None
-
         if action == 'SKIP_LEVEL':
             self._start_skip_ad()
         elif action == 'PUNISHMENT_AD':
@@ -669,6 +752,7 @@ class SlidingPuzzleGame(BoxLayout):
             self.lock_frame.bg_rect = RoundedRectangle(size=self.lock_frame.size, pos=self.lock_frame.pos, radius=[25])
             Color(0, 0.9, 1, 0.35)
             self.lock_frame.bg_gloss = RoundedRectangle(size=(self.lock_frame.width - 10, self.lock_frame.height * 0.4), pos=(self.lock_frame.x + 5, self.lock_frame.y + self.lock_frame.height * 0.55), radius=[20])
+
         with self.lock_frame.canvas.after:
             Color(0.4, 0.85, 1, 0.7)
             self.lock_frame.bg_line = Line(rounded_rectangle=(self.lock_frame.x, self.lock_frame.y, self.lock_frame.width, self.lock_frame.height, 25), width=1.5)
@@ -723,48 +807,7 @@ class SlidingPuzzleGame(BoxLayout):
         self.lock_frame.add_widget(msg_lbl)
         self.lock_frame.add_widget(status_lbl)
         self.lock_frame.add_widget(self.lock_ad_button)
-
         self.puzzle_grid.add_widget(self.lock_frame)
-
-    def network_failed(self, request, error):
-        self.internet_available = False
-        self.ad_button.disabled = False
-        if hasattr(self, 'lock_ad_button') and self.lock_ad_button is not None:
-            self.lock_ad_button.disabled = False
-            
-        popup_layout = BoxLayout(orientation='vertical', padding=20, spacing=15)
-        lbl = Label(text="Connection Error / Weak Signal!\nPlease check Mobile Data / Wi-Fi\nand tap Retry.",
-                     font_size='14sp', bold=True, color=(1, 0.2, 0.2, 1), halign='center', valign='middle')
-        lbl.bind(size=lbl.setter('text_size'))
-        popup_layout.add_widget(lbl)
-        
-        ok_btn = Button(text="RETRY", bold=True, size_hint=(0.4, 0.3), pos_hint={'center_x': 0.5}, background_color=(0, 0.8, 1, 1))
-        popup_layout.add_widget(ok_btn)
-        
-        popup = Popup(title='NETWORK NOTICE', content=popup_layout, size_hint=(0.85, 0.4), auto_dismiss=False)
-        popup.title_align = 'center'
-        popup.title_size = '16sp'
-        popup.title_color = [1, 0.2, 0.2, 1]
-        popup.background_color = [0.05, 0.08, 0.15, 0.95]
-        
-        def on_ok(instance):
-            if self.is_processing_click:
-                return
-            self.is_processing_click = True
-            popup.dismiss()
-            Clock.schedule_once(lambda dt: self.verify_network_retry(), 1.2)
-            
-        ok_btn.bind(on_press=on_ok)
-        popup.open()
-
-    def verify_network_retry(self):
-        self.is_processing_click = False
-        UrlRequest("https://clients3.google.com/generate_204",
-                   on_success=self._on_network_check_success,
-                   on_error=self.network_failed,
-                   on_failure=self.network_failed,
-                   on_redirect=self._on_network_check_success,
-                   timeout=10)
 
     def clear_alert_label(self, dt):
         if hasattr(self, 'alert_label') and self.alert_label.parent:
@@ -774,60 +817,83 @@ class SlidingPuzzleGame(BoxLayout):
             self.lock_ad_button.disabled = False
 
     def trigger_punishment_ad(self, instance):
-        # Debounce check to prevent multi-tapping
+        """[Bug 1, 3 & 8 Fix] Triggers AdMob Ads with instant fallback & GC-protected network validation."""
         if self.is_processing_click:
             return
         self.is_processing_click = True
-        Clock.schedule_once(lambda dt: setattr(self, 'is_processing_click', False), 1.0)
 
         if self.punishment_pool <= 0 and not self.is_skipping_via_ad:
+            self.is_processing_click = False
             return
 
         self.ad_button.disabled = True
         if self.lock_ad_button is not None:
             self.lock_ad_button.disabled = True
 
-        # AdMob Show Attempt with Fallback Protection
+        # Ensure Real AdMob Show logic with explicit callback state
+        ad_shown = False
         if self.ads:
             try:
                 if self.is_skipping_via_ad and hasattr(self.ads, 'is_rewarded_video_loaded') and self.ads.is_rewarded_video_loaded():
                     self.ads.show_rewarded_video()
+                    ad_shown = True
                 elif hasattr(self.ads, 'is_interstitial_loaded') and self.ads.is_interstitial_loaded():
                     self.ads.show_interstitial()
                     self.ads.request_interstitial()
+                    ad_shown = True
             except Exception as e:
                 print(f"AdMob Show Exception: {e}")
 
+        if ad_shown:
+            self.is_processing_click = False
+
         self.pending_action = 'PUNISHMENT_AD'
-        UrlRequest("https://clients3.google.com/generate_204",
+        # [Bug 8 Fix] GC Protection for Network Request Object
+        self.active_net_request = UrlRequest("https://clients3.google.com/generate_204",
                     on_success=self._on_network_check_success,
                     on_error=self.network_failed,
                     on_failure=self.network_failed,
                     timeout=8)
 
     def _start_ad_stream_verified(self, request, result):
+        """[Bug 3 & 7 Fix] Starts ad stream timer using scheduled clock variable tracking."""
         self.internet_available = True
         self.ad_button.disabled = True
         if hasattr(self, 'lock_ad_button') and self.lock_ad_button is not None:
             self.lock_ad_button.disabled = True
-        self.countdown_pool = min(30, self.punishment_pool)
+
+        self.countdown_pool = min(30, self.punishment_pool) if self.punishment_pool > 0 else 10
+        
+        # [Bug 3 & 7 Fix] Store scheduled timer in class reference self.ad_timer_event
+        if hasattr(self, 'ad_timer_event') and self.ad_timer_event:
+            Clock.unschedule(self.ad_timer_event)
         Clock.unschedule(self.process_ad_stream)
-        Clock.schedule_interval(self.process_ad_stream, 1.0)
+        
+        self.ad_timer_event = Clock.schedule_interval(self.process_ad_stream, 1.0)
 
     def process_ad_stream(self, dt):
+        """[Bug 4 Fix] Countdown stream processing with seamless level transition execution."""
         self.countdown_pool -= 1
         if self.countdown_pool <= 0:
+            if hasattr(self, 'ad_timer_event') and self.ad_timer_event:
+                Clock.unschedule(self.ad_timer_event)
+                self.ad_timer_event = None
+            Clock.unschedule(self.process_ad_stream)
+            
+            self.is_processing_click = False
             self.ad_button.text = "Watch Punishment Ad"
             self.ad_button.disabled = False
             if hasattr(self, 'lock_ad_button') and self.lock_ad_button is not None:
                 self.lock_ad_button.text = "WATCH AD TO UNLOCK LEVEL"
                 self.lock_ad_button.disabled = False
-            
+
             if self.is_skipping_via_ad:
                 self.is_skipping_via_ad = False
                 self.save_game_state()
-                if not self.challenge_mode: self.transition_next_step()
-                else: self.initialize_level(reset_attempts=True)
+                if not self.challenge_mode:
+                    self.transition_next_step()
+                else:
+                    self.initialize_level(reset_attempts=True)
             else:
                 self.punishment_pool = 0
                 self.punish_label.text = "Punishment Box: 0 Seconds"
@@ -875,6 +941,7 @@ class SlidingPuzzleGame(BoxLayout):
                                               'high_score': int(self.high_score)}}
         json_string = json.dumps(game_state_data)
         encrypted_string = xor_crypt(json_string)
+
         with open(file_path, 'w') as f:
             f.write(encrypted_string)
 
@@ -887,17 +954,27 @@ class SliderApp(App):
         return self.game
 
     def on_pause(self):
-        # Unschedule active timers when app goes to background to save battery/RAM
+        """[Bug 6 & 7 Fix] Resets locks, active popups, and cleans up scheduled timers when moving to background."""
         if hasattr(self, 'game') and self.game:
+            # Unschedule all active clock events
             Clock.unschedule(self.game.update_timer)
             Clock.unschedule(self.game.process_ad_stream)
+            if hasattr(self.game, 'ad_timer_event') and self.game.ad_timer_event:
+                Clock.unschedule(self.game.ad_timer_event)
+                self.game.ad_timer_event = None
+                
+            # Reset async locks and dismiss ghost popups
+            self.game.is_processing_click = False
+            self.game._dismiss_active_popups()
         return True
 
     def on_resume(self):
-        # Safely restore timers if game was active when returning
-        if hasattr(self, 'game') and self.game and self.game.game_active and self.game.time_left > 0:
-            Clock.unschedule(self.game.update_timer)
-            self.game.timer_trigger = Clock.schedule_interval(self.game.update_timer, 1.0)
+        """[Bug 6 Fix] Restores active timer safely when resuming application."""
+        if hasattr(self, 'game') and self.game:
+            self.game.is_processing_click = False
+            if self.game.game_active and self.game.time_left > 0:
+                Clock.unschedule(self.game.update_timer)
+                self.game.timer_trigger = Clock.schedule_interval(self.game.update_timer, 1.0)
 
 if __name__ == '__main__':
     SliderApp().run()
