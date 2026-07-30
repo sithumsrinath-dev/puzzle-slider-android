@@ -32,7 +32,7 @@ version = 1.0
 
 # (list) Application requirements
 # comma separated e.g. requirements = sqlite3,kivy
-requirements = python3,kivy,kivmob,android
+requirements = python3,kivy,android
 
 # (list) Custom source folders for python modules
 #source.dirs =
@@ -95,7 +95,7 @@ android.manifest.application_inject =
 android.add_gradle_dependencies = com.google.android.gms:play-services-ads:22.6.0
 
 # (list) Application meta-data to add (key=value)
-android.manifest.application_meta_data = com.google.android.gms.ads.APPLICATION_ID=ca-app-pub-5106431642894326~3643301881
+android.meta_data = com.google.android.gms.ads.APPLICATION_ID=ca-app-pub-5106431642894326~3643301881
 
 # (bool) Enable AndroidX support
 android.androidx = True
