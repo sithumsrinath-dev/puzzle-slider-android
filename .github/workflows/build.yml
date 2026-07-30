@@ -26,6 +26,11 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
 
+    - name: Expand Swap Space for RAM
+      uses: pierotofy/set-swap-space@master
+      with:
+        swap-size-gb: 12
+
     - name: Install System Dependencies
       run: |
         sudo apt-get update
@@ -51,7 +56,7 @@ jobs:
 
     - name: Install Python Build Dependencies
       run: |
-        python -m pip install --upgrade pip setuptools wheel
+        python -m pip install "pip<24.1" "setuptools<69.0.0"
         python -m pip install --upgrade cython virtualenv buildozer kivy
 
     - name: Generate Valid Buildozer Spec
@@ -71,7 +76,7 @@ jobs:
         buildozer_sec = '[buildozer]' + parts[1] if len(parts) > 1 else ''
 
         replacements = {
-            r'^[# ]*title\s*=.*': 'title = Puzzle Slider',
+            r'^[# ]*title\s*=.*': 'title = Ultimate Sliding Puzzle',
             r'^[# ]*package\.name\s*=.*': 'package.name = puzzleslider',
             r'^[# ]*package\.domain\s*=.*': 'package.domain = org.senu',
             r'^[# ]*source\.include_exts\s*=.*': 'source.include_exts = py,png,jpg,kv,atlas',
@@ -111,6 +116,8 @@ jobs:
         export HOME=/home/runner
         export BUILDOZER_ALLOW_ORG_TEST_DOMAIN=1
         buildozer android release
+      env:
+        MAKEFLAGS: "-j2"
 
     - name: Upload Build Artifacts
       uses: actions/upload-artifact@v4
