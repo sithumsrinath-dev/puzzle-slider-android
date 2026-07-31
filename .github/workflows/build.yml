@@ -91,7 +91,7 @@ jobs:
             r'^[# ]*android\.minapi\s*=.*': 'android.minapi = 21',
             r'^[# ]*android\.sdk\s*=.*': 'android.sdk = 34',
             r'^[# ]*android\.ndk\s*=.*': 'android.ndk = 25b',
-            r'^[# ]*android\.archs\s*=.*': 'android.archs = arm64-v8a, armeabi-v7a',
+            r'^[# ]*android\.archs\s*=.*': 'android.archs = arm64-v8a',
             r'^[# ]*p4a\.bootstrap\s*=.*': 'p4a.bootstrap = sdl2',
             r'^[# ]*android\.add_gradle_dependencies\s*=.*': 'android.add_gradle_dependencies = com.google.android.gms:play-services-ads:22.6.0',
             r'^[# ]*android\.meta_data\s*=.*': 'android.manifest.application_meta_data = com.google.android.gms.ads.APPLICATION_ID=ca-app-pub-5106431642894326~3643301881'
