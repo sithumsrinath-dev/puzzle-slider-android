@@ -32,7 +32,7 @@ version = 1.0
 
 # (list) Application requirements
 # comma separated e.g. requirements = sqlite3,kivy
-requirements = python3,kivy,android
+requirements = python3,kivy==2.3.0,android,pyjnius,requests,urllib3,certifi,openssl
 
 # (list) Custom source folders for python modules
 #source.dirs =
@@ -62,7 +62,7 @@ android.minapi = 21
 android.sdk = 34
 
 # (str) Android NDK version to use  
-android.ndk = 25b
+android.ndk = 25c
 
 # (int) Android NDK API to use. This is the minimum API supported by your app.
 #android.ndk_api = 21
@@ -71,7 +71,7 @@ android.ndk = 25b
 #android.private_storage = True
 
 # (list) Permissions
-android.permissions = INTERNET, ACCESS_NETWORK_STATE
+android.permissions = INTERNET, ACCESS_NETWORK_STATE, ACCESS_WIFI_STATE
 
 # (list) features (adds tags to AndroidManifest.xml)
 #android.features = android.hardware.usb.host
@@ -92,7 +92,7 @@ android.manifest.application_inject =
 #android.add_java_src =
 
 # (str) Gradle dependencies to add
-android.add_gradle_dependencies = com.google.android.gms:play-services-ads:22.6.0
+android.add_gradle_dependencies = com.google.android.gms:play-services-ads:22.6.0, androidx.multidex:multidex:2.0.1
 
 # (list) Application meta-data to add (key=value)
 android.meta_data = com.google.android.gms.ads.APPLICATION_ID=ca-app-pub-5106431642894326~3643301881
@@ -119,7 +119,7 @@ android.androidx = True
 #android.copy_libs = 1
 
 # (str) The Android arch to build for, choices: armeabi-v7a, arm64-v8a, x86, x86_64
-android.archs = arm64-v8a
+android.archs = arm64-v8a, armeabi-v7a
 
 # (bool) Enables Android Lint inspection
 #android.lint = False
@@ -159,3 +159,4 @@ warn_root = 1
 
 # (str) Accept SDK license
 android.accept_sdk_license = True
+android.enable_multidex = True
