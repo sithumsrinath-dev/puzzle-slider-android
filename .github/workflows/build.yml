@@ -25,6 +25,11 @@ jobs:
         sudo apt-get clean
         df -h
 
+    - name: Set up Swap Space
+      uses: pierotofy/set-swap-space@v1
+      with:
+        swap-size-gb: 10
+
     - name: Set up Python 3.11
       uses: actions/setup-python@v5
       with:
@@ -35,11 +40,6 @@ jobs:
       with:
         distribution: 'temurin'
         java-version: '17'
-
-    - name: Expand Swap Space for RAM
-      uses: pierotofy/set-swap-space@master
-      with:
-        swap-size-gb: 12
 
     - name: Install System Dependencies
       run: |
@@ -92,6 +92,7 @@ jobs:
         yes | buildozer android release
       env:
         MAKEFLAGS: "-j2"
+        GRADLE_OPTS: "-Xmx2048m -XX:MaxMetaspaceSize=512m -Dorg.gradle.parallel=false"
 
     - name: Upload Build Artifacts
       uses: actions/upload-artifact@v4
