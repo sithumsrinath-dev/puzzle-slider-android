@@ -67,52 +67,15 @@ jobs:
     - name: Install Python Build Dependencies
       run: |
         python -m pip install "pip<24.1" "setuptools<69.0.0"
-        python -m pip install --upgrade cython virtualenv buildozer kivy
+        python -m pip install --upgrade "cython<3.0.0" virtualenv buildozer kivy
 
-    - name: Generate Valid Buildozer Spec
+    - name: Validate Repository Buildozer Spec
       run: |
-        rm -f buildozer.spec
-        buildozer init
-        
-        # Safely update buildozer.spec using Regex without breaking Kivy/Buildozer variables
-        python3 -c "
-        import re
-
-        with open('buildozer.spec', 'r') as f:
-            content = f.read()
-
-        parts = content.split('[buildozer]')
-        app_sec = parts[0]
-        buildozer_sec = '[buildozer]' + parts[1] if len(parts) > 1 else ''
-
-        replacements = {
-            r'^[# ]*title\s*=.*': 'title = Ultimate Sliding Puzzle',
-            r'^[# ]*package\.name\s*=.*': 'package.name = puzzleslider',
-            r'^[# ]*package\.domain\s*=.*': 'package.domain = org.senu',
-            r'^[# ]*source\.include_exts\s*=.*': 'source.include_exts = py,png,jpg,kv,atlas',
-            r'^[# ]*version\s*=.*': 'version = 1.0',
-            r'^[# ]*requirements\s*=.*': 'requirements = python3,kivy,kivmob,android',
-            r'^[# ]*orientation\s*=.*': 'orientation = portrait',
-            r'^[# ]*presplash\.filename\s*=.*': r'presplash.filename = %(source.dir)s/presplash.jpg',
-            r'^[# ]*icon\.filename\s*=.*': r'icon.filename = %(source.dir)s/icon.png',
-            r'^[# ]*android\.accept_sdk_license\s*=.*': 'android.accept_sdk_license = True',
-            r'^[# ]*fullscreen\s*=.*': 'fullscreen = 0',
-            r'^[# ]*android\.api\s*=.*': 'android.api = 34',
-            r'^[# ]*android\.minapi\s*=.*': 'android.minapi = 21',
-            r'^[# ]*android\.sdk\s*=.*': 'android.sdk = 34',
-            r'^[# ]*android\.ndk\s*=.*': 'android.ndk = 25b',
-            r'^[# ]*android\.archs\s*=.*': 'android.archs = arm64-v8a',
-            r'^[# ]*p4a\.bootstrap\s*=.*': 'p4a.bootstrap = sdl2',
-            r'^[# ]*android\.add_gradle_dependencies\s*=.*': 'android.add_gradle_dependencies = com.google.android.gms:play-services-ads:22.6.0',
-            r'^[# ]*android\.meta_data\s*=.*': 'android.manifest.application_meta_data = com.google.android.gms.ads.APPLICATION_ID=ca-app-pub-5106431642894326~3643301881'
-        }
-
-        for pattern, repl in replacements.items():
-            app_sec = re.sub(pattern, repl, app_sec, flags=re.MULTILINE)
-
-        with open('buildozer.spec', 'w') as f:
-            f.write(app_sec + buildozer_sec)
-        "
+        if [ ! -f buildozer.spec ]; then
+          echo "Error: buildozer.spec not found in repository root!"
+          exit 1
+        fi
+        echo "buildozer.spec verified successfully."
 
     - name: Build Android App Bundle (AAB) with Buildozer
       run: |
@@ -125,7 +88,8 @@ jobs:
         
         export HOME=/home/runner
         export BUILDOZER_ALLOW_ORG_TEST_DOMAIN=1
-        buildozer android release
+        export ACCEPT_SDK_LICENSE=1
+        yes | buildozer android release
       env:
         MAKEFLAGS: "-j2"
 
