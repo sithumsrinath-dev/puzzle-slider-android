@@ -32,7 +32,7 @@ version = 1.0
 
 # (list) Application requirements
 # comma separated e.g. requirements = sqlite3,kivy
-requirements = python3,kivy==2.3.0,android,pyjnius,openssl
+requirements = python3==3.11.0,kivy,android,pyjnius,openssl
 
 # (list) Custom source folders for python modules
 #source.dirs =
