@@ -26,7 +26,7 @@ jobs:
         df -h
 
     - name: Set up Swap Space
-      uses: pierotofy/set-swap-space@v1
+      uses: pierotofy/set-swap-space@master
       with:
         swap-size-gb: 10
 
