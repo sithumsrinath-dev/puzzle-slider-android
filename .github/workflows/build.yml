@@ -86,9 +86,6 @@ jobs:
         export BUILDOZER_ALLOW_ORG_TEST_DOMAIN=1
         export ACCEPT_SDK_LICENSE=1
 
-        # පැරණි Python 3.14 Caches ඉවත් කිරීමට Clean Command එක:
-        buildozer android clean
-
         yes | buildozer android release
       env:
         MAKEFLAGS: "-j2"
