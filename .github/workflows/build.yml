@@ -42,16 +42,15 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
 
-    - name: Install Build Dependencies
+    - name: Install System Dependencies
       run: |
         sudo apt-get update -o Acquire::Retries=3
-        sudo apt-get install -y --no-install-recommends \
+        sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
           ccache \
           cmake \
           ninja-build \
           zip \
           unzip \
-          openjdk-17-jdk \
           autoconf \
           libtool \
           pkg-config \
