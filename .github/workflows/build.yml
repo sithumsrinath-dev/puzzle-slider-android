@@ -60,10 +60,17 @@ jobs:
           libffi-dev \
           libssl-dev
 
-    - name: Install Python Build Dependencies
+    - name: Upgrade Pip and Core Tooling
       run: |
-        python -m pip install "pip<24.1" "setuptools<69.0.0"
-        python -m pip install --upgrade "cython<3.0.0" virtualenv buildozer kivy
+        python -m pip install --upgrade pip setuptools wheel
+
+    - name: Install Cython (Isolated Step)
+      run: |
+        python -m pip install --no-cache-dir "cython<3.0.0"
+
+    - name: Install Buildozer and Kivy Dependencies
+      run: |
+        python -m pip install --no-cache-dir virtualenv buildozer kivy
 
     - name: Validate Repository Buildozer Spec
       run: |
