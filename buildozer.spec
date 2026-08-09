@@ -77,7 +77,6 @@ android.permissions = INTERNET, ACCESS_NETWORK_STATE, ACCESS_WIFI_STATE
 #android.features = android.hardware.usb.host
 
 # (str) Bootstrap to use for android builds
-#android.bootstrap = sdl2
 
 # (str) XML file to inject into AndroidManifest.xml
 #android.manifest.xml =
@@ -95,7 +94,7 @@ android.manifest.application_inject =
 android.add_gradle_dependencies = com.google.android.gms:play-services-ads:22.6.0, androidx.multidex:multidex:2.0.1
 
 # (list) Application meta-data to add (key=value)
-android.meta_data = com.google.android.gms.ads.APPLICATION_ID=ca-app-pub-3940256099942544~3347511713
+android.meta_data = com.google.android.gms.ads.APPLICATION_ID=ca-app-pub-5106431642894326~3643301881
 
 # (bool) Enable AndroidX support
 android.androidx = True
