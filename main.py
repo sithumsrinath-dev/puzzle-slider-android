@@ -18,26 +18,33 @@ from kivy.core.window import Window
 
 if platform == 'android':
     from jnius import PythonJavaClass, java_method, autoclass
+
     class AdLoadCallback(PythonJavaClass):
         __javainterface__ = 'com/google/android/gms/ads/rewarded/RewardedAdLoadCallback'
         __javacontext__ = 'app'
+
         def __init__(self, app_instance):
             super().__init__()
             self.app_instance = app_instance
+
         @java_method('(Lcom/google/android/gms/ads/rewarded/RewardedAd;)V')
         def onAdLoaded(self, rewarded_ad):
             self.app_instance.rewarded_ad = rewarded_ad
             print("AdMob: Rewarded Ad Loaded Successfully!")
+
         @java_method('(Lcom/google/android/gms/ads/LoadAdError;)V')
         def onAdFailedToLoad(self, load_ad_error):
             self.app_instance.rewarded_ad = None
             print(f"AdMob: Failed to load ad - {load_ad_error.toString()}")
+
     class RewardListener(PythonJavaClass):
         __javainterface__ = 'com/google/android/gms/ads/OnUserEarnedRewardListener'
         __javacontext__ = 'app'
+
         def __init__(self, app_instance):
             super().__init__()
             self.app_instance = app_instance
+
         @java_method('(Lcom/google/android/gms/ads/rewarded/RewardItem;)V')
         def onUserEarnedReward(self, reward_item):
             # Ad එක බලා අවසන් වූ පසු Punishment Pool එක 0 කර Level එක Reset කිරීම
@@ -100,7 +107,7 @@ class SlidingPuzzleGame(BoxLayout):
             encrypted_string = xor_crypt(json.dumps(game_state_data))
             with open(file_path, 'w') as f:
                 f.write(encrypted_string)
-            
+                
             profile = game_state_data['user_profile']
             self.current_level = int(profile['current_level'])
             self.punishment_pool = int(profile['punishment_pool'])
@@ -324,8 +331,10 @@ class SlidingPuzzleGame(BoxLayout):
                 MobileAds = autoclass('com.google.android.gms.ads.MobileAds')
                 RewardedAd = autoclass('com.google.android.gms.ads.rewarded.RewardedAd')
                 AdRequest = autoclass('com.google.android.gms.ads.AdRequest$Builder')
+
                 currentActivity = PythonActivity.mActivity
                 MobileAds.initialize(currentActivity)
+
                 adRequest = AdRequest().build()
                 unit_id = "ca-app-pub-3940256099942544/5224354917" # Standard Test Unit ID
                 self.load_callback = AdLoadCallback(self)
@@ -372,6 +381,7 @@ class SlidingPuzzleGame(BoxLayout):
         self.lock_frame = None
         if reset_attempts:
             self.failed_attempts = 0
+
         Clock.unschedule(self.update_timer)
         if self.timer_trigger:
             Clock.unschedule(self.timer_trigger)
@@ -464,7 +474,6 @@ class SlidingPuzzleGame(BoxLayout):
                     btn.bg_rect = RoundedRectangle(size=btn.size, pos=btn.pos, radius=[16])
                     Color(0, 0.9, 1, 0.35)
                     btn.bg_gloss = RoundedRectangle(size=(btn.width - 6, btn.height * 0.4), pos=(btn.x + 3, btn.y + btn.height * 0.55), radius=[12])
-
                 with btn.canvas.after:
                     Color(0.4, 0.85, 1, 0.7)
                     btn.line = Line(rounded_rectangle=(btn.x, btn.y, btn.width, btn.height, 16), width=1.5)
@@ -489,6 +498,7 @@ class SlidingPuzzleGame(BoxLayout):
     def tile_clicked(self, idx):
         if not self.game_active:
             return
+
         if self.is_adjacent(idx, self.blank_index):
             # Save historical state snapshot via atomic Python lists injection arrays
             self.history.append(list(self.tiles))
@@ -512,6 +522,7 @@ class SlidingPuzzleGame(BoxLayout):
     def update_timer(self, dt):
         if not self.game_active:
             return
+
         self.time_left -= 1
         if self.time_left <= 0:
             self.timer_label.text = "Time: 0s"
@@ -524,8 +535,8 @@ class SlidingPuzzleGame(BoxLayout):
         if self.timer_trigger:
             Clock.unschedule(self.timer_trigger)
             self.timer_trigger = None
-        self.game_active = False
 
+        self.game_active = False
         penalty = 5 if self.challenge_mode else 2
         max_limit = 60 if self.challenge_mode else 30
         self.punishment_pool = min(max_limit, self.punishment_pool + penalty)
@@ -543,20 +554,20 @@ class SlidingPuzzleGame(BoxLayout):
                         valign='middle')
             lbl.bind(size=lbl.setter('text_size'))
             popup_layout.add_widget(lbl)
-            
+
             btn_layout = BoxLayout(orientation='horizontal', spacing=10, size_hint_y=0.4)
             skip_btn = Button(text="Skip Level", bold=True, background_color=(0, 0.8, 1, 1))
             cancel_btn = Button(text="Cancel", bold=True, background_color=(0.8, 0.2, 0.2, 1))
             btn_layout.add_widget(skip_btn)
             btn_layout.add_widget(cancel_btn)
             popup_layout.add_widget(btn_layout)
-            
+
             popup = Popup(title='SYSTEM NOTICE', content=popup_layout, size_hint=(0.8, 0.45), auto_dismiss=False)
             popup.title_align = 'center'
             popup.title_size = '16sp'
             popup.title_color = [0, 0.9, 1, 1]
             popup.background_color = [0.05, 0.08, 0.15, 0.92]
-            
+
             def on_skip(instance):
                 popup.dismiss()
                 self.ad_button.disabled = True
@@ -572,7 +583,7 @@ class SlidingPuzzleGame(BoxLayout):
                 popup.dismiss()
                 self.failed_attempts = 0
                 self.initialize_level(reset_attempts=False)
-                
+
             skip_btn.bind(on_press=on_skip)
             cancel_btn.bind(on_press=on_cancel)
             popup.open()
@@ -581,20 +592,21 @@ class SlidingPuzzleGame(BoxLayout):
             popup_layout = BoxLayout(orientation='vertical', padding=20)
             lbl = Label(text="!! YOU FAIL !!", font_size='24sp', bold=True, color=(1, 0.2, 0.2, 1), halign='center')
             popup_layout.add_widget(lbl)
-            
+
             popup = Popup(title='SYSTEM NOTICE', content=popup_layout, size_hint=(0.8, 0.35), auto_dismiss=False)
             popup.title_align = 'center'
             popup.title_size = '16sp'
             popup.title_color = [0, 0.9, 1, 1] # Neon Cyan Title Text
             popup.background_color = [0.05, 0.08, 0.15, 0.92] # Strict Matte Deep Slate Blue Official Background
             popup.open()
-            
+
             Clock.schedule_once(lambda dt: popup.dismiss(), 1.5)
             Clock.schedule_once(lambda dt: self.initialize_level(reset_attempts=False), 1.6)
 
     # ==================================================================
     # 100% VERIFIED BULLETPROOF NETWORK, ADMOB JNI & RECOVERY PATCH
     # ==================================================================
+
     def reinitialize_admob(self):
         """
         Explicitly triggers Java JNI MobileAds re-initialization 
@@ -623,6 +635,7 @@ class SlidingPuzzleGame(BoxLayout):
                 PythonActivity = autoclass('org.kivy.android.PythonActivity')
                 RewardedAd = autoclass('com.google.android.gms.ads.rewarded.RewardedAd')
                 AdRequest = autoclass('com.google.android.gms.ads.AdRequest$Builder')
+
                 currentActivity = PythonActivity.mActivity
                 adRequest = AdRequest().build()
                 unit_id = "ca-app-pub-3940256099942544/5224354917" # Standard Test Unit ID
@@ -703,17 +716,48 @@ class SlidingPuzzleGame(BoxLayout):
             elif self.punishment_pool > 0 and self.lock_frame is None:
                 self.render_locked_milestone_ui()
 
-    def _verify_and_show_ad_with_retry(self, request, result, retry_count=0, max_retries=16):
-        """
-        Ad Loading Latency Wait-Loop via JNI Native Integration.
-        """
+    def _verify_and_show_ad_with_retry(self, request, result, retry_count=0, max_retries=10):
         self.is_processing_click = False
-        
-        # Safe Fallback Strategy
-        if hasattr(self, '_start_ad_stream_verified'):
-            self._start_ad_stream_verified(request, result)
-        elif getattr(self, 'is_skipping_via_ad', False):
-            self._start_skip_ad()
+        # 1. AdMob Ad එක Memory එකේ Ready නම් direct show කිරීම
+        if platform == 'android' and hasattr(self, 'rewarded_ad') and self.rewarded_ad is not None:
+            try:
+                from jnius import autoclass
+                PythonActivity = autoclass('org.kivy.android.PythonActivity')
+                activity = PythonActivity.mActivity
+                
+                # GC Clean-up එක වැළැක්වීමට Listener එක Class Variable එකක් ලෙස තැබීම
+                self.current_reward_listener = RewardListener(self)
+                
+                def run_ad():
+                    try:
+                        self.rewarded_ad.show(activity, self.current_reward_listener)
+                        self.rewarded_ad = None
+                    except Exception as ex:
+                        print(f"JNI Ad Show Error: {ex}")
+
+                activity.runOnUiThread(run_ad)
+                return
+            except Exception as e:
+                print(f"Error invoking AdMob Ad: {e}")
+
+        # 2. Ad එක Ready නැත්නම් Retry Count එක පරීක්ෂා කර නැවත Fetch කිරීම
+        if retry_count < max_retries:
+            print(f"AdMob: Ad not ready yet. Retrying... ({retry_count + 1}/{max_retries})")
+            self.reload_admob_ads() # Ad එක Request කිරීම
+            # තප්පර 1.5 කට පසු නැවත Check කිරීම
+            Clock.schedule_once(
+                lambda dt: self._verify_and_show_ad_with_retry(request, result, retry_count + 1, max_retries), 
+                1.5
+            )
+        else:
+            # නියමිත කාලය තුළ Ad එක Load නොවුනහොත් පමණක් Error Alert එකක් පෙන්වීම
+            self.network_failed(None, "Ad Loading Failed - Please try again in a moment.")
+
+    def _start_ad_stream_verified(self, request, result):
+        """
+        Simulated Timer එක සම්පූර්ණයෙන්ම ඉවත් කර Ad Mobility Retries වලට යොමු කිරීම
+        """
+        self._verify_and_show_ad_with_retry(request, result)
 
     def _start_skip_ad(self):
         """Initiates level skip and triggers active AdMob polling loop."""
@@ -752,8 +796,8 @@ class SlidingPuzzleGame(BoxLayout):
                 return False
             except Exception as e:
                 print(f"Error showing AdMob Ad: {e}")
-        
-        self.ad_poll_timer += 1
+                self.ad_poll_timer += 1
+
         if self.ad_poll_timer >= 10:
             if hasattr(self, 'ad_polling_event') and self.ad_polling_event:
                 Clock.unschedule(self.ad_polling_event)
@@ -771,19 +815,19 @@ class SlidingPuzzleGame(BoxLayout):
             if self.timer_trigger:
                 Clock.unschedule(self.timer_trigger)
                 self.timer_trigger = None
-            
+                
             # Enhanced Official Dark Neon Glass Alert Dialog Architecture
             popup_layout = BoxLayout(orientation='vertical', padding=20)
             lbl = Label(text="== YOU WIN!\n==", font_size='24sp', bold=True, color=(0, 1, 0, 1), halign='center')
             popup_layout.add_widget(lbl)
-            
+
             popup = Popup(title='SYSTEM NOTICE', content=popup_layout, size_hint=(0.8, 0.35), auto_dismiss=False)
             popup.title_align = 'center'
             popup.title_size = '16sp'
             popup.title_color = [0, 0.9, 1, 1] # Neon Cyan Title Text
             popup.background_color = [0.05, 0.08, 0.15, 0.92] # Strict Matte Deep Slate Blue Official Background
             popup.open()
-            
+
             Clock.schedule_once(lambda dt: popup.dismiss(), 1.5)
             Clock.schedule_once(lambda dt: self.transition_next_step(), 1.6)
 
@@ -852,7 +896,7 @@ class SlidingPuzzleGame(BoxLayout):
         # [Bug 1 Fix] Release click lock securely
         self.is_processing_click = False
         self.internet_available = False
-        
+
         # [Bug 3 Fix] Safely pause/unschedule ad stream timer during network failures
         if hasattr(self, 'ad_timer_event') and self.ad_timer_event:
             Clock.unschedule(self.ad_timer_event)
@@ -913,7 +957,6 @@ class SlidingPuzzleGame(BoxLayout):
             self.lock_frame.bg_rect = RoundedRectangle(size=self.lock_frame.size, pos=self.lock_frame.pos, radius=[25])
             Color(0, 0.9, 1, 0.35)
             self.lock_frame.bg_gloss = RoundedRectangle(size=(self.lock_frame.width - 10, self.lock_frame.height * 0.4), pos=(self.lock_frame.x + 5, self.lock_frame.y + self.lock_frame.height * 0.55), radius=[20])
-
         with self.lock_frame.canvas.after:
             Color(0.4, 0.85, 1, 0.7)
             self.lock_frame.bg_line = Line(rounded_rectangle=(self.lock_frame.x, self.lock_frame.y, self.lock_frame.width, self.lock_frame.height, 25), width=1.5)
@@ -945,12 +988,12 @@ class SlidingPuzzleGame(BoxLayout):
         status_lbl = Label(text=f"Required Ad Time: {self.punishment_pool} Seconds", font_size='14sp', bold=True, color=(1, 0.5, 0, 1), size_hint_y=0.15)
         
         self.lock_ad_button = Button(text="WATCH AD TO UNLOCK LEVEL", 
-                                     font_size='15sp', 
-                                     bold=True, 
-                                     color=(1, 1, 1, 1), 
-                                     background_normal='', 
-                                     background_color=(0, 0, 0, 0), 
-                                     size_hint_y=0.25)
+                                      font_size='15sp', 
+                                      bold=True, 
+                                      color=(1, 1, 1, 1), 
+                                      background_normal='', 
+                                      background_color=(0, 0, 0, 0), 
+                                      size_hint_y=0.25)
         self.lock_ad_button.bind(on_press=lambda x: self.trigger_punishment_ad(None))
         
         with self.lock_ad_button.canvas.before:
@@ -960,7 +1003,6 @@ class SlidingPuzzleGame(BoxLayout):
             self.lock_ad_button.bg_rect = RoundedRectangle(size=self.lock_ad_button.size, pos=self.lock_ad_button.pos, radius=[15])
             Color(0, 0.9, 1, 0.35)
             self.lock_ad_button.bg_gloss = RoundedRectangle(size=(self.lock_ad_button.width - 6, self.lock_ad_button.height * 0.4), pos=(self.lock_ad_button.x + 3, self.lock_ad_button.y + self.lock_ad_button.height * 0.55), radius=[10])
-
         with self.lock_ad_button.canvas.after:
             Color(0.4, 0.85, 1, 0.7)
             self.lock_ad_button.btn_line = Line(rounded_rectangle=(self.lock_ad_button.x, self.lock_ad_button.y, self.lock_ad_button.width, self.lock_ad_button.height, 16), width=1.5)
@@ -996,26 +1038,10 @@ class SlidingPuzzleGame(BoxLayout):
         
         # [Bug 8 Fix] GC Protection for Network Request Object
         self.active_net_request = UrlRequest("https://clients3.google.com/generate_204", 
-                    on_success=self._on_network_check_success, 
-                    on_error=self.network_failed, 
-                    on_failure=self.network_failed, 
-                    timeout=8)
-
-    def _start_ad_stream_verified(self, request, result):
-        """[Bug 3 & 7 Fix] Starts ad stream timer using scheduled clock variable tracking."""
-        self.internet_available = True
-        self.ad_button.disabled = True
-        if hasattr(self, 'lock_ad_button') and self.lock_ad_button is not None:
-            self.lock_ad_button.disabled = True
-
-        self.countdown_pool = min(30, self.punishment_pool) if self.punishment_pool > 0 else 10
-        
-        # [Bug 3 & 7 Fix] Store scheduled timer in class reference self.ad_timer_event
-        if hasattr(self, 'ad_timer_event') and self.ad_timer_event:
-            Clock.unschedule(self.ad_timer_event)
-        Clock.unschedule(self.process_ad_stream)
-        
-        self.ad_timer_event = Clock.schedule_interval(self.process_ad_stream, 1.0)
+                     on_success=self._on_network_check_success, 
+                     on_error=self.network_failed, 
+                     on_failure=self.network_failed, 
+                     timeout=8)
 
     def process_ad_stream(self, dt):
         """[Bug 4 Fix] Countdown stream processing with seamless level transition execution."""
@@ -1064,7 +1090,7 @@ class SlidingPuzzleGame(BoxLayout):
         popup_layout = BoxLayout(orientation='vertical', padding=20)
         lbl = Label(text="👑 GRAND MASTER UNLOCKED:\nTHE TIME CHALLENGE!\n👑", font_size='24sp', bold=True, color=(1, 0.84, 0, 1), halign='center')
         popup_layout.add_widget(lbl)
-        
+
         popup = Popup(title='SYSTEM NOTICE', content=popup_layout, size_hint=(0.8, 0.35), auto_dismiss=True)
         popup.title_align = 'center'
         popup.title_size = '16sp'
@@ -1081,10 +1107,10 @@ class SlidingPuzzleGame(BoxLayout):
         data_dir = app.user_data_dir if app else os.path.dirname(__file__)
         file_path = os.path.join(data_dir, 'game_secure_state.json')
 
-        game_state_data = {'user_profile': {'current_level': int(self.current_level), 
-                                                'punishment_pool': int(self.punishment_pool), 
-                                                'challenge_mode': bool(self.challenge_mode), 
-                                                'high_score': int(self.high_score)}}
+        game_state_data = {'user_profile': {'current_level': int(self.current_level),
+                                                 'punishment_pool': int(self.punishment_pool),
+                                                 'challenge_mode': bool(self.challenge_mode),
+                                                 'high_score': int(self.high_score)}}
         json_string = json.dumps(game_state_data)
         encrypted_string = xor_crypt(json_string)
         with open(file_path, 'w') as f:
@@ -1107,7 +1133,7 @@ class SliderApp(App):
             if hasattr(self.game, 'ad_timer_event') and self.game.ad_timer_event:
                 Clock.unschedule(self.game.ad_timer_event)
                 self.game.ad_timer_event = None
-            
+                
             # Reset async locks and dismiss ghost popups
             self.game.is_processing_click = False
             self.game._dismiss_active_popups()
