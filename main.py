@@ -16,6 +16,36 @@ from kivy.network.urlrequest import UrlRequest
 from kivy.utils import platform
 from kivy.core.window import Window
 
+if platform == 'android':
+    from jnius import PythonJavaClass, java_method, autoclass
+    class AdLoadCallback(PythonJavaClass):
+        __javainterface__ = 'com/google/android/gms/ads/rewarded/RewardedAdLoadCallback'
+        __javacontext__ = 'app'
+        def __init__(self, app_instance):
+            super().__init__()
+            self.app_instance = app_instance
+        @java_method('(Lcom/google/android/gms/ads/rewarded/RewardedAd;)V')
+        def onAdLoaded(self, rewarded_ad):
+            self.app_instance.rewarded_ad = rewarded_ad
+            print("AdMob: Rewarded Ad Loaded Successfully!")
+        @java_method('(Lcom/google/android/gms/ads/LoadAdError;)V')
+        def onAdFailedToLoad(self, load_ad_error):
+            self.app_instance.rewarded_ad = None
+            print(f"AdMob: Failed to load ad - {load_ad_error.toString()}")
+    class RewardListener(PythonJavaClass):
+        __javainterface__ = 'com/google/android/gms/ads/OnUserEarnedRewardListener'
+        __javacontext__ = 'app'
+        def __init__(self, app_instance):
+            super().__init__()
+            self.app_instance = app_instance
+        @java_method('(Lcom/google/android/gms/ads/rewarded/RewardItem;)V')
+        def onUserEarnedReward(self, reward_item):
+            # Ad එක බලා අවසන් වූ පසු Punishment Pool එක 0 කර Level එක Reset කිරීම
+            self.app_instance.punishment_pool = 0
+            self.app_instance.save_game_state()
+            self.app_instance.initialize_level(reset_attempts=True)
+            print("AdMob: Reward Earned Successfully!")
+
 # AdMob KivMob Integration (Disabled to enforce Native PyJNIus Direct Bridge)
 KIVMOB_AVAILABLE = False
 
@@ -37,6 +67,7 @@ class SlidingPuzzleGame(BoxLayout):
         # Add state flags for debounce and ad status
         self.is_processing_click = False
         self.ad_failed_fallback = False
+
         # AdMob Initialization
         self.ads = None
         if platform == 'android':
@@ -44,12 +75,14 @@ class SlidingPuzzleGame(BoxLayout):
                 self.setup_admob()
             except Exception as e:
                 print(f"AdMob Initialization Error: {e}")
+
         # Load Secure Local Storage
         from kivy.app import App
         import os
         app = App.get_running_app()
         data_dir = app.user_data_dir if app else os.path.dirname(__file__)
         file_path = os.path.join(data_dir, 'game_secure_state.json')
+        
         try:
             with open(file_path, 'r') as f:
                 encrypted_string = f.read()
@@ -206,7 +239,6 @@ class SlidingPuzzleGame(BoxLayout):
                                 background_color=(0, 0, 0, 0), # Transparent background color
                                 halign='center', 
                                 valign='middle')
-
         self.ad_button.bind(size=self.ad_button.setter('text_size')) # Auto wrapping inside button boundaries
         self.ad_button.bind(on_press=self.trigger_punishment_ad)
 
@@ -292,15 +324,12 @@ class SlidingPuzzleGame(BoxLayout):
                 MobileAds = autoclass('com.google.android.gms.ads.MobileAds')
                 RewardedAd = autoclass('com.google.android.gms.ads.rewarded.RewardedAd')
                 AdRequest = autoclass('com.google.android.gms.ads.AdRequest$Builder')
-                
                 currentActivity = PythonActivity.mActivity
                 MobileAds.initialize(currentActivity)
-                
                 adRequest = AdRequest().build()
-                unit_id = "ca-app-pub-3940256099942544/5224354917"
-                
-                RewardedAd.load(currentActivity, unit_id, adRequest, None)
-                print("AdMob setup successfully initialized via PyJNIus Direct Bridge with Rewarded Test Ad Unit ID.")
+                unit_id = "ca-app-pub-3940256099942544/5224354917" # Standard Test Unit ID
+                self.load_callback = AdLoadCallback(self)
+                RewardedAd.load(currentActivity, unit_id, adRequest, self.load_callback)
             except Exception as e:
                 print(f"AdMob setup error: {e}")
 
@@ -585,18 +614,21 @@ class SlidingPuzzleGame(BoxLayout):
             print(f"AdMob Re-init Warning: {e}")
 
     def reload_admob_ads(self):
-        """
-        Thread-safe dynamic ad unit fetching with JNI Bridge protection.
-        """
         if platform == 'android':
             if getattr(self, 'is_fetching_ads', False):
                 return
             self.is_fetching_ads = True
             try:
-                print("AdMob: Re-verifying Native JNI Engine & fetching ad units...")
-                
-                # 1. Native JNI Engine Reboot
-                self.reinitialize_admob()
+                from jnius import autoclass
+                PythonActivity = autoclass('org.kivy.android.PythonActivity')
+                RewardedAd = autoclass('com.google.android.gms.ads.rewarded.RewardedAd')
+                AdRequest = autoclass('com.google.android.gms.ads.AdRequest$Builder')
+                currentActivity = PythonActivity.mActivity
+                adRequest = AdRequest().build()
+                unit_id = "ca-app-pub-3940256099942544/5224354917" # Standard Test Unit ID
+                if not hasattr(self, 'load_callback') or self.load_callback is None:
+                    self.load_callback = AdLoadCallback(self)
+                RewardedAd.load(currentActivity, unit_id, adRequest, self.load_callback)
             except Exception as e:
                 print(f"AdMob Reload Exception: {e}")
             finally:
@@ -703,38 +735,31 @@ class SlidingPuzzleGame(BoxLayout):
         self.ad_polling_event = Clock.schedule_interval(self._show_rewarded_ad_cached, 1.0)
 
     def _show_rewarded_ad_cached(self, dt):
-        """Guaranteed Ad Display Verification (Prevents False Positive Skips)."""
-        self.ad_poll_timer += 1
-        ad_shown = True
-        
-        # Scenario A: Ad displayed successfully -> Stop Polling & Start Stream Timer
-        if ad_shown:
-            if hasattr(self, 'ad_polling_event') and self.ad_polling_event:
-                Clock.unschedule(self.ad_polling_event)
-                self.ad_polling_event = None
+        if platform == 'android' and hasattr(self, 'rewarded_ad') and self.rewarded_ad is not None:
+            try:
+                from jnius import autoclass
+                PythonActivity = autoclass('org.kivy.android.PythonActivity')
+                activity = PythonActivity.mActivity
                 
-            if hasattr(self, 'ad_timer_event') and self.ad_timer_event:
-                Clock.unschedule(self.ad_timer_event)
-            Clock.unschedule(self.process_ad_stream)
-
-            self.ad_timer_event = Clock.schedule_interval(self.process_ad_stream, 1.0)
-            return False
-
-        # Scenario B: 10s Limit Exceeded without Ad -> Cancel Skip, Prevent False Positive
+                reward_listener = RewardListener(self)
+                # Native Android UI Thread එක මත Ad එක Display කිරීම
+                activity.runOnUiThread(lambda: self.rewarded_ad.show(activity, reward_listener))
+                self.rewarded_ad = None
+                
+                if hasattr(self, 'ad_polling_event') and self.ad_polling_event:
+                    Clock.unschedule(self.ad_polling_event)
+                    self.ad_polling_event = None
+                return False
+            except Exception as e:
+                print(f"Error showing AdMob Ad: {e}")
+        
+        self.ad_poll_timer += 1
         if self.ad_poll_timer >= 10:
             if hasattr(self, 'ad_polling_event') and self.ad_polling_event:
                 Clock.unschedule(self.ad_polling_event)
                 self.ad_polling_event = None
-                
-            self.is_skipping_via_ad = False
-            self.ad_button.disabled = False
-            if hasattr(self, 'lock_ad_button') and self.lock_ad_button is not None:
-                self.lock_ad_button.disabled = False
-                
-            # Show Ad Load Error Notice
             self.network_failed(None, "Ad Loading Timeout - Please Retry")
             return False
-
         return True
 
     def check_win_condition(self):
@@ -746,7 +771,7 @@ class SlidingPuzzleGame(BoxLayout):
             if self.timer_trigger:
                 Clock.unschedule(self.timer_trigger)
                 self.timer_trigger = None
-                
+            
             # Enhanced Official Dark Neon Glass Alert Dialog Architecture
             popup_layout = BoxLayout(orientation='vertical', padding=20)
             lbl = Label(text="== YOU WIN!\n==", font_size='24sp', bold=True, color=(0, 1, 0, 1), halign='center')
@@ -800,7 +825,6 @@ class SlidingPuzzleGame(BoxLayout):
         self.ad_button.disabled = True
         if self.lock_ad_button is not None:
             self.lock_ad_button.disabled = True
-
         UrlRequest("https://clients3.google.com/generate_204", 
                     on_success=self._on_network_check_success, 
                     on_error=self.network_failed, 
@@ -921,13 +945,12 @@ class SlidingPuzzleGame(BoxLayout):
         status_lbl = Label(text=f"Required Ad Time: {self.punishment_pool} Seconds", font_size='14sp', bold=True, color=(1, 0.5, 0, 1), size_hint_y=0.15)
         
         self.lock_ad_button = Button(text="WATCH AD TO UNLOCK LEVEL", 
-                                      font_size='15sp', 
-                                      bold=True, 
-                                      color=(1, 1, 1, 1), 
-                                      background_normal='', 
-                                      background_color=(0, 0, 0, 0), 
-                                      size_hint_y=0.25)
-
+                                     font_size='15sp', 
+                                     bold=True, 
+                                     color=(1, 1, 1, 1), 
+                                     background_normal='', 
+                                     background_color=(0, 0, 0, 0), 
+                                     size_hint_y=0.25)
         self.lock_ad_button.bind(on_press=lambda x: self.trigger_punishment_ad(None))
         
         with self.lock_ad_button.canvas.before:
@@ -946,7 +969,6 @@ class SlidingPuzzleGame(BoxLayout):
         self.lock_frame.add_widget(msg_lbl)
         self.lock_frame.add_widget(status_lbl)
         self.lock_frame.add_widget(self.lock_ad_button)
-
         self.puzzle_grid.add_widget(self.lock_frame)
 
     def clear_alert_label(self, dt):
@@ -974,10 +996,10 @@ class SlidingPuzzleGame(BoxLayout):
         
         # [Bug 8 Fix] GC Protection for Network Request Object
         self.active_net_request = UrlRequest("https://clients3.google.com/generate_204", 
-                     on_success=self._on_network_check_success, 
-                     on_error=self.network_failed, 
-                     on_failure=self.network_failed, 
-                     timeout=8)
+                    on_success=self._on_network_check_success, 
+                    on_error=self.network_failed, 
+                    on_failure=self.network_failed, 
+                    timeout=8)
 
     def _start_ad_stream_verified(self, request, result):
         """[Bug 3 & 7 Fix] Starts ad stream timer using scheduled clock variable tracking."""
@@ -1058,9 +1080,10 @@ class SlidingPuzzleGame(BoxLayout):
         app = App.get_running_app()
         data_dir = app.user_data_dir if app else os.path.dirname(__file__)
         file_path = os.path.join(data_dir, 'game_secure_state.json')
-        game_state_data = {'user_profile': {'current_level': int(self.current_level),
-                                                'punishment_pool': int(self.punishment_pool),
-                                                'challenge_mode': bool(self.challenge_mode),
+
+        game_state_data = {'user_profile': {'current_level': int(self.current_level), 
+                                                'punishment_pool': int(self.punishment_pool), 
+                                                'challenge_mode': bool(self.challenge_mode), 
                                                 'high_score': int(self.high_score)}}
         json_string = json.dumps(game_state_data)
         encrypted_string = xor_crypt(json_string)
@@ -1084,7 +1107,7 @@ class SliderApp(App):
             if hasattr(self.game, 'ad_timer_event') and self.game.ad_timer_event:
                 Clock.unschedule(self.game.ad_timer_event)
                 self.game.ad_timer_event = None
-                
+            
             # Reset async locks and dismiss ghost popups
             self.game.is_processing_click = False
             self.game._dismiss_active_popups()
