@@ -93,7 +93,9 @@ jobs:
         export BUILDOZER_ALLOW_ORG_TEST_DOMAIN=1
         export ACCEPT_SDK_LICENSE=1
 
-        yes | buildozer android release
+        # Verbose flag (-v) එක ඇතුළත් කර ඇති අතර clean කිරීමද එකතු කර ඇත
+        buildozer android clean
+        yes | buildozer -v android release
       env:
         MAKEFLAGS: "-j2"
         GRADLE_OPTS: "-Xmx2048m -XX:MaxMetaspaceSize=512m -Dorg.gradle.parallel=false"
