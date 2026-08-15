@@ -88,14 +88,13 @@ android.manifest.application_inject =
 #android.add_java_jar =
 
 # (str) Extra Java sources to add
-# [CRITICAL STEP 04 FIX] Direct mapping of native java source folder
 android.add_java_src = java_src
 
 # (str) Gradle dependencies to add
 android.gradle_dependencies = com.google.android.gms:play-services-ads:23.0.0, androidx.multidex:multidex:2.0.1
 
 # (list) Application meta-data to add (key=value)
-android.manifest.application_data = <meta-data android:name="com.google.android.gms.ads.APPLICATION_ID" android:value="ca-app-pub-3940256099942544~3347511713"/>
+android.meta_data = com.google.android.gms.ads.APPLICATION_ID=ca-app-pub-3940256099942544~3347511713
 
 # (bool) Enable AndroidX support
 android.androidx = True
