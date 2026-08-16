@@ -1,21 +1,3 @@
-### 📋 පියවර 02 - ක්‍රියාත්මක කිරීමේ වාර්තාව (Execution Notes)
-
-**මෙම පියවරෙහි අරමුණ:**
-Python/PyJNIus හරහා dynamic ලෙස Android Event Listeners subclass කිරීමේදී සිදුවන Memory Corruption සහ Threading Crashing (Fatal Signals) වැළැක්වීම සඳහා static Native Java Class එකක් නිර්මාණය කිරීම.
-
-**සිදුකරන ලද තාක්ෂණික වෙනස්කම්:**
-
-1. **`org.senu.puzzleslider.AdMobHelper` Class එක සෑදීම:** AdMob SDK initialize කිරීම, Ad එක load කිරීම සහ පෙන්වීම (Show) සඳහා static ක්‍රමවේද (Static Methods) සැකසීම.
-2. **UI Thread Isolation (`runOnUiThread`):** Android UI Thread එකට අදාළ Google AdMob Calls සියල්ලම `activityContext.runOnUiThread` මගින් isolated කොට ආරක්ෂිතව ධාවනය වන සේ සකස් කිරීම.
-3. **Thread-Safe Volatile Flags:** `volatile boolean` variables (`isLoaded`, `rewardEarned`, `adFailed`) භාවිතයෙන් PyJNIus / Kivy side එකෙහි Polling loop එකට (Kivy Thread) direct memory read access ලබා දීම.
-
----
-
-### 🛠️ Native Java File එක නිර්මාණය කිරීමේ විධානය (Full Code Deliverable)
-
-ඔබගේ Project Directory එක තුළ `java_src/org/senu/puzzleslider/AdMobHelper.java` ලෙස පහත ගොනුව සම්පූර්ණයෙන්ම ස්ථාපනය කරන්න.
-
-```java
 package org.senu.puzzleslider;
 
 import android.app.Activity;
@@ -26,7 +8,7 @@ import com.google.android.gms.ads.MobileAds;
 import com.google.android.gms.ads.rewarded.RewardedAd;
 import com.google.android.gms.ads.rewarded.RewardedAdLoadCallback;
 import com.google.android.gms.ads.OnUserEarnedRewardListener;
-import com.google.android.gms.ads.rewarded.RewardItem;
+import com.google.android.gms.ads.RewardItem;
 import com.google.android.gms.ads.AdError;
 import com.google.android.gms.ads.FullScreenContentCallback;
 
@@ -36,6 +18,7 @@ public class AdMobHelper {
     private static volatile boolean isLoaded = false;
     private static volatile boolean rewardEarned = false;
     private static volatile boolean adFailed = false;
+    private static volatile boolean isInitialized = false;
 
     // Google AdMob Rewarded Ad Unit ID (Production Unit ID හෝ Test Unit ID භාවිත කරන්න)
     private static final String AD_UNIT_ID = "ca-app-pub-3940256099942544/5224354917";
@@ -50,7 +33,10 @@ public class AdMobHelper {
         activityContext.runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                MobileAds.initialize(activityContext, initializationStatus -> {});
+                MobileAds.initialize(activityContext, initializationStatus -> {
+                    isInitialized = true;
+                    loadRewardedAd();
+                });
             }
         });
     }
@@ -142,5 +128,3 @@ public class AdMobHelper {
         adFailed = false;
     }
 }
-
-```
