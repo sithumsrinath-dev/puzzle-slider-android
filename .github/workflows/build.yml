@@ -80,7 +80,7 @@ jobs:
         fi
         echo "buildozer.spec verified successfully."
 
-    - name: Build Android App Bundle (AAB) with Buildozer
+    - name: Build Android APK with Buildozer
       run: |
         unset ANDROID_SDK_ROOT
         unset ANDROID_HOME
@@ -93,7 +93,7 @@ jobs:
         export BUILDOZER_ALLOW_ORG_TEST_DOMAIN=1
         export ACCEPT_SDK_LICENSE=1
 
-        yes | buildozer -v android release
+        yes | buildozer -v android debug
       env:
         MAKEFLAGS: "-j2"
         GRADLE_OPTS: "-Xmx2048m -XX:MaxMetaspaceSize=512m -Dorg.gradle.parallel=false"
@@ -101,5 +101,5 @@ jobs:
     - name: Upload Build Artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: release-aab
-        path: bin/*.aab
+        name: debug-apk
+        path: bin/*.apk
