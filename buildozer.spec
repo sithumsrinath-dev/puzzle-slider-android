@@ -130,7 +130,7 @@ android.archs = arm64-v8a
 #p4a.branch = master
 
 # (str) Ouput format, either apk or aar or aab
-android.output_format = aab
+android.output_format = apk
 
 fullscreen = 0
 p4a.bootstrap = sdl2
