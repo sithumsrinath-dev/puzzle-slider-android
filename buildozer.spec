@@ -82,7 +82,7 @@ android.permissions = INTERNET, ACCESS_NETWORK_STATE, ACCESS_WIFI_STATE
 #android.manifest.xml =
 
 # (str) Extra XML files to inject into AndroidManifest.xml
-android.manifest.application_inject =
+android.manifest.application_inject = <meta-data android:name="com.google.android.gms.ads.APPLICATION_ID" android:value="ca-app-pub-3940256099942544~3347511713"/>
 
 # (str) Extra Java classes to add
 #android.add_java_jar =
