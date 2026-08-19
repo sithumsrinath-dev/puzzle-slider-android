@@ -28,10 +28,14 @@ public class AdMobHelper {
         activityContext.runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                MobileAds.initialize(activityContext, initializationStatus -> {
-                    isInitialized = true;
-                    loadRewardedAd();
-                });
+                try {
+                    MobileAds.initialize(activityContext, initializationStatus -> {
+                        isInitialized = true;
+                        loadRewardedAd();
+                    });
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
         });
     }
