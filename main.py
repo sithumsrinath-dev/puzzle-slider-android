@@ -67,7 +67,7 @@ class SlidingPuzzleGame(BoxLayout):
             encrypted_string = xor_crypt(json.dumps(game_state_data))
             with open(file_path, 'w') as f:
                 f.write(encrypted_string)
-                
+            
             profile = game_state_data['user_profile']
             self.current_level = int(profile['current_level'])
             self.punishment_pool = int(profile['punishment_pool'])
@@ -152,9 +152,11 @@ class SlidingPuzzleGame(BoxLayout):
         with timer_container.canvas.before:
             Color(0.05, 0.1, 0.2, 0.4) # Subtle Dark Glass Sub-panel
             timer_container.bg_rect = RoundedRectangle(radius=[10])
+
         def _update_timer_container(instance, value):
             timer_container.bg_rect.pos = instance.pos
             timer_container.bg_rect.size = instance.size
+
         timer_container.bind(pos=_update_timer_container, size=_update_timer_container)
         
         self.timer_label = Label(text="", font_size='16sp', bold=True, color=(1, 0.2, 0.5, 1), halign='center')
@@ -165,9 +167,11 @@ class SlidingPuzzleGame(BoxLayout):
         with wins_container.canvas.before:
             Color(0.05, 0.1, 0.2, 0.4)
             wins_container.bg_rect = RoundedRectangle(radius=[10])
+
         def _update_wins_container(instance, value):
             wins_container.bg_rect.pos = instance.pos
             wins_container.bg_rect.size = instance.size
+
         wins_container.bind(pos=_update_wins_container, size=_update_wins_container)
         
         self.wins_label = Label(text=f"Wins: {self.total_wins}", font_size='16sp', bold=True, color=(0, 1, 0, 1), halign='center')
@@ -283,11 +287,16 @@ class SlidingPuzzleGame(BoxLayout):
         if platform == 'android':
             try:
                 from jnius import autoclass
-                PythonActivity = autoclass("org.kivy.android.PythonActivity")
+                # Android UI Thread Activity Context එක ලබා ගැනීම
+                PythonActivity = autoclass('org.kivy.android.PythonActivity')
+                AdMobHelper = autoclass('org.senu.puzzleslider.AdMobHelper')
+
+                # Activity Context එක සමඟ AdMob Init කිරීම
                 current_activity = PythonActivity.mActivity
+                if current_activity:
+                    AdMobHelper.init(current_activity)
                 if current_activity is not None:
-                    self.AdMobHelper = autoclass("org.senu.puzzleslider.AdMobHelper")
-                    self.AdMobHelper.init(current_activity)
+                    self.AdMobHelper = AdMobHelper
                     print("LOGCAT_DEBUG: AdMob Native Helper Initialized Successfully via UI Thread.")
                 else:
                     Clock.schedule_once(self.setup_admob, 0.5)
@@ -334,7 +343,6 @@ class SlidingPuzzleGame(BoxLayout):
         self.lock_frame = None
         if reset_attempts:
             self.failed_attempts = 0
-
         Clock.unschedule(self.update_timer)
         if self.timer_trigger:
             Clock.unschedule(self.timer_trigger)
@@ -427,7 +435,6 @@ class SlidingPuzzleGame(BoxLayout):
                     btn.bg_rect = RoundedRectangle(size=btn.size, pos=btn.pos, radius=[16])
                     Color(0, 0.9, 1, 0.35)
                     btn.bg_gloss = RoundedRectangle(size=(btn.width - 6, btn.height * 0.4), pos=(btn.x + 3, btn.y + btn.height * 0.55), radius=[12])
-
                 with btn.canvas.after:
                     Color(0.4, 0.85, 1, 0.7)
                     btn.line = Line(rounded_rectangle=(btn.x, btn.y, btn.width, btn.height, 16), width=1.5)
@@ -452,7 +459,6 @@ class SlidingPuzzleGame(BoxLayout):
     def tile_clicked(self, idx):
         if not self.game_active:
             return
-
         if self.is_adjacent(idx, self.blank_index):
             # Save historical state snapshot via atomic Python lists injection arrays
             self.history.append(list(self.tiles))
@@ -496,8 +502,8 @@ class SlidingPuzzleGame(BoxLayout):
         self.punish_label.text = f"Punishment Box: {self.punishment_pool} Seconds"
         
         self.save_game_state()
-
         self.failed_attempts += 1
+
         if self.failed_attempts >= 10:
             popup_layout = BoxLayout(orientation='vertical', padding=20, spacing=15)
             lbl = Label(text='10 Times Failed!\nWant to skip this level by watching a 10s Punishment Ad?', 
@@ -561,7 +567,6 @@ class SlidingPuzzleGame(BoxLayout):
     # ==================================================================
     # 100% VERIFIED BULLETPROOF NETWORK, ADMOB JNI & RECOVERY PATCH
     # ==================================================================
-
     def reinitialize_admob(self):
         """
         Explicitly triggers Java JNI MobileAds re-initialization 
@@ -948,7 +953,6 @@ class SlidingPuzzleGame(BoxLayout):
             self.lock_frame.bg_rect = RoundedRectangle(size=self.lock_frame.size, pos=self.lock_frame.pos, radius=[25])
             Color(0, 0.9, 1, 0.35)
             self.lock_frame.bg_gloss = RoundedRectangle(size=(self.lock_frame.width - 10, self.lock_frame.height * 0.4), pos=(self.lock_frame.x + 5, self.lock_frame.y + self.lock_frame.height * 0.55), radius=[20])
-
         with self.lock_frame.canvas.after:
             Color(0.4, 0.85, 1, 0.7)
             self.lock_frame.bg_line = Line(rounded_rectangle=(self.lock_frame.x, self.lock_frame.y, self.lock_frame.width, self.lock_frame.height, 25), width=1.5)
@@ -980,12 +984,12 @@ class SlidingPuzzleGame(BoxLayout):
         status_lbl = Label(text=f"Required Ad Time: {self.punishment_pool} Seconds", font_size='14sp', bold=True, color=(1, 0.5, 0, 1), size_hint_y=0.15)
         
         self.lock_ad_button = Button(text="WATCH AD TO UNLOCK LEVEL", 
-                                 font_size='15sp', 
-                                 bold=True, 
-                                 color=(1, 1, 1, 1), 
-                                 background_normal='', 
-                                 background_color=(0, 0, 0, 0), 
-                                 size_hint_y=0.25)
+                                  font_size='15sp', 
+                                  bold=True, 
+                                  color=(1, 1, 1, 1), 
+                                  background_normal='', 
+                                  background_color=(0, 0, 0, 0), 
+                                  size_hint_y=0.25)
         self.lock_ad_button.bind(on_press=lambda x: self.trigger_punishment_ad(None))
         
         with self.lock_ad_button.canvas.before:
@@ -1032,17 +1036,17 @@ class SlidingPuzzleGame(BoxLayout):
         
         # [Bug 8 Fix] GC Protection for Network Request Object
         self.active_net_request = UrlRequest("https://clients3.google.com/generate_204", 
-                       on_success=self._on_network_check_success, 
-                       on_error=self.network_failed, 
-                       on_failure=self.network_failed, 
-                       timeout=8)
+                        on_success=self._on_network_check_success, 
+                        on_error=self.network_failed, 
+                        on_failure=self.network_failed, 
+                        timeout=8)
 
     def process_ad_stream(self, dt):
         """[Bug 4 Fix] Countdown stream processing with seamless level transition execution."""
         self.countdown_pool -= 1
         if self.countdown_pool <= 0:
             if hasattr(self, 'ad_timer_event') and self.ad_timer_event:
-                Clock.unschedule(self.ad_timer_event)
+                Clock.unschedule(self.game.ad_timer_event)
                 self.ad_timer_event = None
             Clock.unschedule(self.process_ad_stream)
             
@@ -1103,9 +1107,9 @@ class SlidingPuzzleGame(BoxLayout):
         file_path = os.path.join(data_dir, 'game_secure_state.json')
         
         game_state_data = {'user_profile': {'current_level': int(self.current_level), 
-                                             'punishment_pool': int(self.punishment_pool), 
-                                             'challenge_mode': bool(self.challenge_mode), 
-                                             'high_score': int(self.high_score)}}
+                                              'punishment_pool': int(self.punishment_pool), 
+                                              'challenge_mode': bool(self.challenge_mode), 
+                                              'high_score': int(self.high_score)}}
         json_string = json.dumps(game_state_data)
         encrypted_string = xor_crypt(json_string)
         with open(file_path, 'w') as f:
