@@ -24,14 +24,14 @@ public class AdMobHelper {
 
     public static void init(final Activity activity) {
         if (activity == null) return;
-        activityContext = activity;
-        activityContext.runOnUiThread(new Runnable() {
+        activity.runOnUiThread(new Runnable() {
             @Override
             public void run() {
                 try {
-                    MobileAds.initialize(activityContext, initializationStatus -> {
+                    activityContext = activity;
+                    MobileAds.initialize(activity.getApplicationContext(), initializationStatus -> {
                         isInitialized = true;
-                        loadRewardedAd();
+                        activity.runOnUiThread(() -> loadRewardedAd());
                     });
                 } catch (Exception e) {
                     e.printStackTrace();
