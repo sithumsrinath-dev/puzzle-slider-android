@@ -82,7 +82,7 @@ android.permissions = INTERNET, ACCESS_NETWORK_STATE, ACCESS_WIFI_STATE
 #android.manifest.xml =
 
 # (str) Extra XML files to inject into AndroidManifest.xml
-android.manifest.application_inject = <meta-data android:name="com.google.android.gms.ads.APPLICATION_ID" android:value="ca-app-pub-3940256099942544~3347511713"/>
+android.manifest.application_inject =
 
 # (str) Extra Java classes to add
 #android.add_java_jar =
@@ -94,7 +94,7 @@ android.add_java_src = java_src
 android.gradle_dependencies = com.google.android.gms:play-services-ads:23.0.0, androidx.multidex:multidex:2.0.1
 
 # (list) Application meta-data to add (key=value)
-android.meta_data = com.google.android.gms.ads.APPLICATION_ID=ca-app-pub-3940256099942544~3347511713
+android.meta_data = com.google.android.gms.ads.APPLICATION_ID=ca-app-pub-3940256099942544~3347511713, com.google.android.gms.ads.delay_app_measurement_init=true
 
 # (bool) Enable AndroidX support
 android.androidx = True
