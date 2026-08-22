@@ -24,14 +24,17 @@ public class AdMobHelper {
 
     public static void init(final Activity activity) {
         if (activity == null) return;
+        activityContext = activity;
         activity.runOnUiThread(new Runnable() {
             @Override
             public void run() {
                 try {
-                    activityContext = activity;
-                    MobileAds.initialize(activity.getApplicationContext(), initializationStatus -> {
-                        isInitialized = true;
-                        activity.runOnUiThread(() -> loadRewardedAd());
+                    MobileAds.initialize(activity.getApplicationContext(), new com.google.android.gms.ads.initialization.OnInitializationCompleteListener() {
+                        @Override
+                        public void onInitializationComplete(com.google.android.gms.ads.initialization.InitializationStatus initializationStatus) {
+                            isInitialized = true;
+                            loadRewardedAd();
+                        }
                     });
                 } catch (Exception e) {
                     e.printStackTrace();
