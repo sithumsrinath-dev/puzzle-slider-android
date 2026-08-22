@@ -67,7 +67,7 @@ class SlidingPuzzleGame(BoxLayout):
             encrypted_string = xor_crypt(json.dumps(game_state_data))
             with open(file_path, 'w') as f:
                 f.write(encrypted_string)
-            
+                
             profile = game_state_data['user_profile']
             self.current_level = int(profile['current_level'])
             self.punishment_pool = int(profile['punishment_pool'])
@@ -285,11 +285,15 @@ class SlidingPuzzleGame(BoxLayout):
         if platform == 'android':
             try:
                 from jnius import autoclass
+                from android.runnable import run_on_ui_thread
                 PythonActivity = autoclass('org.kivy.android.PythonActivity')
                 AdMobHelper = autoclass('org.senu.puzzleslider.AdMobHelper')
                 current_activity = PythonActivity.mActivity
                 if current_activity is not None:
-                    AdMobHelper.init(current_activity)
+                    @run_on_ui_thread
+                    def _init_native():
+                        AdMobHelper.init(current_activity)
+                    _init_native()
                     self.AdMobHelper = AdMobHelper
                 else:
                     Clock.schedule_once(self.setup_admob, 0.5)
@@ -694,6 +698,7 @@ class SlidingPuzzleGame(BoxLayout):
     def check_ad_status_polling(self, dt):
         if platform != 'android' or not hasattr(self, 'AdMobHelper') or self.AdMobHelper is None:
             return False
+
         try:
             if self.AdMobHelper.hasEarnedReward():
                 self.AdMobHelper.resetRewardState()
@@ -701,6 +706,7 @@ class SlidingPuzzleGame(BoxLayout):
                     self.poll_event.cancel()
                 self.on_reward_success()
                 return False
+
             if self.AdMobHelper.isAdFailedToLoad():
                 self.AdMobHelper.resetRewardState()
                 if hasattr(self, 'poll_event') and self.poll_event:
@@ -712,6 +718,7 @@ class SlidingPuzzleGame(BoxLayout):
             if hasattr(self, 'poll_event') and self.poll_event:
                 self.poll_event.cancel()
             return False
+
         return True
 
     def on_reward_success(self):
@@ -975,12 +982,12 @@ class SlidingPuzzleGame(BoxLayout):
         status_lbl = Label(text=f"Required Ad Time: {self.punishment_pool} Seconds", font_size='14sp', bold=True, color=(1, 0.5, 0, 1), size_hint_y=0.15)
         
         self.lock_ad_button = Button(text="WATCH AD TO UNLOCK LEVEL", 
-                                   font_size='15sp', 
-                                   bold=True, 
-                                   color=(1, 1, 1, 1), 
-                                   background_normal='', 
-                                   background_color=(0, 0, 0, 0), 
-                                   size_hint_y=0.25)
+                                    font_size='15sp', 
+                                    bold=True, 
+                                    color=(1, 1, 1, 1), 
+                                    background_normal='', 
+                                    background_color=(0, 0, 0, 0), 
+                                    size_hint_y=0.25)
         self.lock_ad_button.bind(on_press=lambda x: self.trigger_punishment_ad(None))
         
         with self.lock_ad_button.canvas.before:
@@ -1026,10 +1033,10 @@ class SlidingPuzzleGame(BoxLayout):
         
         # [Bug 8 Fix] GC Protection for Network Request Object
         self.active_net_request = UrlRequest("https://clients3.google.com/generate_204", 
-                         on_success=self._on_network_check_success, 
-                         on_error=self.network_failed, 
-                         on_failure=self.network_failed, 
-                         timeout=8)
+                                  on_success=self._on_network_check_success, 
+                                  on_error=self.network_failed, 
+                                  on_failure=self.network_failed, 
+                                  timeout=8)
 
     def process_ad_stream(self, dt):
         """[Bug 4 Fix] Countdown stream processing with seamless level transition execution."""
@@ -1097,9 +1104,9 @@ class SlidingPuzzleGame(BoxLayout):
         file_path = os.path.join(data_dir, 'game_secure_state.json')
         
         game_state_data = {'user_profile': {'current_level': int(self.current_level), 
-                                               'punishment_pool': int(self.punishment_pool), 
-                                               'challenge_mode': bool(self.challenge_mode), 
-                                               'high_score': int(self.high_score)}}
+                                        'punishment_pool': int(self.punishment_pool), 
+                                        'challenge_mode': bool(self.challenge_mode), 
+                                        'high_score': int(self.high_score)}}
         json_string = json.dumps(game_state_data)
         encrypted_string = xor_crypt(json_string)
         with open(file_path, 'w') as f:
