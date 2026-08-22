@@ -42,7 +42,7 @@ class SlidingPuzzleGame(BoxLayout):
         # AdMob Initialization
         self.ads = None
         # Note: setup_admob calls shifted to App.build() scheduled clock event to prevent Launch Crash.
-
+        
         # Load Secure Local Storage
         from kivy.app import App
         import os
@@ -156,7 +156,6 @@ class SlidingPuzzleGame(BoxLayout):
         def _update_timer_container(instance, value):
             timer_container.bg_rect.pos = instance.pos
             timer_container.bg_rect.size = instance.size
-
         timer_container.bind(pos=_update_timer_container, size=_update_timer_container)
         
         self.timer_label = Label(text="", font_size='16sp', bold=True, color=(1, 0.2, 0.5, 1), halign='center')
@@ -171,7 +170,6 @@ class SlidingPuzzleGame(BoxLayout):
         def _update_wins_container(instance, value):
             wins_container.bg_rect.pos = instance.pos
             wins_container.bg_rect.size = instance.size
-
         wins_container.bind(pos=_update_wins_container, size=_update_wins_container)
         
         self.wins_label = Label(text=f"Wins: {self.total_wins}", font_size='16sp', bold=True, color=(0, 1, 0, 1), halign='center')
@@ -287,22 +285,17 @@ class SlidingPuzzleGame(BoxLayout):
         if platform == 'android':
             try:
                 from jnius import autoclass
-                # Android UI Thread Activity Context එක ලබා ගැනීම
                 PythonActivity = autoclass('org.kivy.android.PythonActivity')
                 AdMobHelper = autoclass('org.senu.puzzleslider.AdMobHelper')
-
-                # Activity Context එක සමඟ AdMob Init කිරීම
                 current_activity = PythonActivity.mActivity
-                if current_activity:
-                    AdMobHelper.init(current_activity)
                 if current_activity is not None:
+                    AdMobHelper.init(current_activity)
                     self.AdMobHelper = AdMobHelper
-                    print("LOGCAT_DEBUG: AdMob Native Helper Initialized Successfully via UI Thread.")
                 else:
                     Clock.schedule_once(self.setup_admob, 0.5)
             except Exception as e:
                 import traceback
-                print(f"LOGCAT_CRASH_CATCHER: AdMob Initialization Failed:\n{traceback.format_exc()}")
+                print(f"AdMob Initialization Exception: {traceback.format_exc()}")
 
     def refresh_screen(self, *args):
         pass
@@ -343,6 +336,7 @@ class SlidingPuzzleGame(BoxLayout):
         self.lock_frame = None
         if reset_attempts:
             self.failed_attempts = 0
+
         Clock.unschedule(self.update_timer)
         if self.timer_trigger:
             Clock.unschedule(self.timer_trigger)
@@ -700,7 +694,6 @@ class SlidingPuzzleGame(BoxLayout):
     def check_ad_status_polling(self, dt):
         if platform != 'android' or not hasattr(self, 'AdMobHelper') or self.AdMobHelper is None:
             return False
-
         try:
             if self.AdMobHelper.hasEarnedReward():
                 self.AdMobHelper.resetRewardState()
@@ -708,7 +701,6 @@ class SlidingPuzzleGame(BoxLayout):
                     self.poll_event.cancel()
                 self.on_reward_success()
                 return False
-
             if self.AdMobHelper.isAdFailedToLoad():
                 self.AdMobHelper.resetRewardState()
                 if hasattr(self, 'poll_event') and self.poll_event:
@@ -720,7 +712,6 @@ class SlidingPuzzleGame(BoxLayout):
             if hasattr(self, 'poll_event') and self.poll_event:
                 self.poll_event.cancel()
             return False
-
         return True
 
     def on_reward_success(self):
@@ -976,7 +967,7 @@ class SlidingPuzzleGame(BoxLayout):
                 self.lock_ad_button.bg_gloss.size = (self.lock_ad_button.width - 6, self.lock_ad_button.height * 0.4)
 
         self.lock_frame.bind(pos=update_frame_bounds, size=update_frame_bounds)
-        
+
         title_lbl = Label(text="LEVEL LOCKED", font_size='22sp', bold=True, color=(0, 1, 1, 1), size_hint_y=0.2)
         msg_text = f"Your Level {self.current_level} is currently locked due to a pending penalty.\nPlease watch a short ad to unlock the next level!"
         msg_lbl = Label(text=msg_text, font_size='15sp', bold=True, color=(1, 1, 1, 1), halign='center', valign='middle', size_hint_y=0.4)
@@ -984,12 +975,12 @@ class SlidingPuzzleGame(BoxLayout):
         status_lbl = Label(text=f"Required Ad Time: {self.punishment_pool} Seconds", font_size='14sp', bold=True, color=(1, 0.5, 0, 1), size_hint_y=0.15)
         
         self.lock_ad_button = Button(text="WATCH AD TO UNLOCK LEVEL", 
-                                  font_size='15sp', 
-                                  bold=True, 
-                                  color=(1, 1, 1, 1), 
-                                  background_normal='', 
-                                  background_color=(0, 0, 0, 0), 
-                                  size_hint_y=0.25)
+                                   font_size='15sp', 
+                                   bold=True, 
+                                   color=(1, 1, 1, 1), 
+                                   background_normal='', 
+                                   background_color=(0, 0, 0, 0), 
+                                   size_hint_y=0.25)
         self.lock_ad_button.bind(on_press=lambda x: self.trigger_punishment_ad(None))
         
         with self.lock_ad_button.canvas.before:
@@ -1008,7 +999,6 @@ class SlidingPuzzleGame(BoxLayout):
         self.lock_frame.add_widget(msg_lbl)
         self.lock_frame.add_widget(status_lbl)
         self.lock_frame.add_widget(self.lock_ad_button)
-
         self.puzzle_grid.add_widget(self.lock_frame)
 
     def clear_alert_label(self, dt):
@@ -1036,10 +1026,10 @@ class SlidingPuzzleGame(BoxLayout):
         
         # [Bug 8 Fix] GC Protection for Network Request Object
         self.active_net_request = UrlRequest("https://clients3.google.com/generate_204", 
-                        on_success=self._on_network_check_success, 
-                        on_error=self.network_failed, 
-                        on_failure=self.network_failed, 
-                        timeout=8)
+                         on_success=self._on_network_check_success, 
+                         on_error=self.network_failed, 
+                         on_failure=self.network_failed, 
+                         timeout=8)
 
     def process_ad_stream(self, dt):
         """[Bug 4 Fix] Countdown stream processing with seamless level transition execution."""
@@ -1107,9 +1097,9 @@ class SlidingPuzzleGame(BoxLayout):
         file_path = os.path.join(data_dir, 'game_secure_state.json')
         
         game_state_data = {'user_profile': {'current_level': int(self.current_level), 
-                                              'punishment_pool': int(self.punishment_pool), 
-                                              'challenge_mode': bool(self.challenge_mode), 
-                                              'high_score': int(self.high_score)}}
+                                               'punishment_pool': int(self.punishment_pool), 
+                                               'challenge_mode': bool(self.challenge_mode), 
+                                               'high_score': int(self.high_score)}}
         json_string = json.dumps(game_state_data)
         encrypted_string = xor_crypt(json_string)
         with open(file_path, 'w') as f:
